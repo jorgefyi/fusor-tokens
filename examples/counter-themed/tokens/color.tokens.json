@@ -1,0 +1,41 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "color": {
+    "gray": {
+      "0": { "$type": "color", "$value": "oklch(99% 0.005 260)" },
+      "1": { "$type": "color", "$value": "oklch(97% 0.006 260)" },
+      "2": { "$type": "color", "$value": "oklch(94% 0.008 260)" },
+      "3": { "$type": "color", "$value": "oklch(91% 0.01 260)" },
+      "4": { "$type": "color", "$value": "oklch(86% 0.012 260)" },
+      "5": { "$type": "color", "$value": "oklch(78% 0.014 260)" },
+      "6": { "$type": "color", "$value": "oklch(70% 0.015 260)" },
+      "7": { "$type": "color", "$value": "oklch(62% 0.016 260)" },
+      "8": { "$type": "color", "$value": "oklch(52% 0.016 260)" },
+      "9": { "$type": "color", "$value": "oklch(44% 0.018 260)" },
+      "10": { "$type": "color", "$value": "oklch(36% 0.018 260)" },
+      "11": { "$type": "color", "$value": "oklch(27% 0.02 260)" },
+      "12": { "$type": "color", "$value": "oklch(18% 0.02 260)" }
+    },
+    "accent": {
+      "3": { "$type": "color", "$value": "oklch(92% 0.04 264)" },
+      "6": { "$type": "color", "$value": "oklch(70% 0.16 264)" },
+      "9": { "$type": "color", "$value": "oklch(55% 0.18 264)" },
+      "11": { "$type": "color", "$value": "oklch(42% 0.14 264)" }
+    },
+    "danger": {
+      "6": { "$type": "color", "$value": "oklch(68% 0.17 25)" },
+      "9": { "$type": "color", "$value": "oklch(55% 0.19 25)" },
+      "11": { "$type": "color", "$value": "oklch(42% 0.15 25)" }
+    },
+    "success": {
+      "6": { "$type": "color", "$value": "oklch(70% 0.14 155)" },
+      "9": { "$type": "color", "$value": "oklch(52% 0.13 155)" },
+      "11": { "$type": "color", "$value": "oklch(40% 0.1 155)" }
+    },
+    "warning": {
+      "6": { "$type": "color", "$value": "oklch(82% 0.14 85)" },
+      "9": { "$type": "color", "$value": "oklch(68% 0.15 85)" },
+      "11": { "$type": "color", "$value": "oklch(46% 0.12 85)" }
+    }
+  }
+}

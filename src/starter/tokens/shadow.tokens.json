@@ -1,0 +1,35 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "shadow": {
+    "sm": {
+      "$type": "shadow",
+      "$value": {
+        "color": "oklch(18% 0.02 260 / 0.08)",
+        "offsetX": "0px",
+        "offsetY": "1px",
+        "blur": "2px",
+        "spread": "0px"
+      }
+    },
+    "md": {
+      "$type": "shadow",
+      "$value": {
+        "color": "oklch(18% 0.02 260 / 0.12)",
+        "offsetX": "0px",
+        "offsetY": "4px",
+        "blur": "12px",
+        "spread": "0px"
+      }
+    },
+    "lg": {
+      "$type": "shadow",
+      "$value": {
+        "color": "oklch(18% 0.02 260 / 0.18)",
+        "offsetX": "0px",
+        "offsetY": "12px",
+        "blur": "32px",
+        "spread": "0px"
+      }
+    }
+  }
+}

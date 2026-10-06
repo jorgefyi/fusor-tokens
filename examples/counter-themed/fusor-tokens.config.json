@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/fusor-tokens/schema.json",
+  "tokens": [
+    "tokens/**/*.tokens.json"
+  ],
+  "outFile": "public/tokens.css",
+  "engine": "terrazzo",
+  "themeAttribute": "data-theme",
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "prefix": "ft"
+}

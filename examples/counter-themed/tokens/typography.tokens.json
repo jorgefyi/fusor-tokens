@@ -1,0 +1,32 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "font": {
+    "family": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": ["system-ui", "-apple-system", "Segoe UI", "sans-serif"]
+      },
+      "mono": {
+        "$type": "fontFamily",
+        "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"]
+      }
+    },
+    "size": {
+      "1": { "$type": "dimension", "$value": "12px" },
+      "2": { "$type": "dimension", "$value": "14px" },
+      "3": { "$type": "dimension", "$value": "16px" },
+      "4": { "$type": "dimension", "$value": "20px" },
+      "5": { "$type": "dimension", "$value": "24px" }
+    },
+    "weight": {
+      "regular": { "$type": "fontWeight", "$value": 400 },
+      "medium": { "$type": "fontWeight", "$value": 500 },
+      "semibold": { "$type": "fontWeight", "$value": 600 }
+    }
+  },
+  "lineHeight": {
+    "tight": { "$type": "number", "$value": 1.25 },
+    "normal": { "$type": "number", "$value": 1.5 },
+    "loose": { "$type": "number", "$value": 1.75 }
+  }
+}

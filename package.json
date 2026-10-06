@@ -1,0 +1,33 @@
+{
+  "name": "fusor-tokens",
+  "version": "0.1.0",
+  "description": "Turn DTCG design tokens into public/tokens.css and wire them into a Fusor app.",
+  "type": "module",
+  "bin": {
+    "fusor-tokens": "./bin/fusor-tokens.js"
+  },
+  "exports": {
+    ".": "./src/cli.js",
+    "./schema.json": "./schema.json"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema.json",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build:example": "node bin/fusor-tokens.js build --cwd examples/counter-themed",
+    "check:example": "node bin/fusor-tokens.js check --cwd examples/counter-themed",
+    "preview": "node scripts/preview.mjs"
+  },
+  "dependencies": {
+    "@terrazzo/cli": "^2.7.1",
+    "@terrazzo/plugin-css": "^2.7.1",
+    "@terrazzo/token-tools": "^2.7.1"
+  }
+}

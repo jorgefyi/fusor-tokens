@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.setAttribute("data-theme", t);
+          if (t === "dark") document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/app.css" />
+    <link rel="icon" href="/favicon.svg" />
+    <title>Shift counter</title>
+  </head>
+  <body>
+    <section class="shell">
+      <article class="panel">
+        <header class="panel-head">
+          <p class="eyebrow">Fusor tokens</p>
+          <h1>Shift</h1>
+        </header>
+        <p class="count" id="count" aria-live="polite">0</p>
+        <div class="row">
+          <button type="button" class="btn btn-quiet" id="minus">Minus</button>
+          <button type="button" class="btn btn-primary" id="plus">Plus</button>
+        </div>
+        <div class="theme" role="group" aria-label="Theme">
+          <button type="button" class="btn" id="light" data-theme-choice="light">Light</button>
+          <button type="button" class="btn" id="dark" data-theme-choice="dark">Dark</button>
+        </div>
+        <div class="swatches" aria-hidden="true">
+          <div class="swatch danger">Danger <span>color.danger</span></div>
+          <div class="swatch success">Success <span>color.success</span></div>
+          <div class="swatch warning">Warning <span>color.warning</span></div>
+        </div>
+        <p class="meta" id="meta"></p>
+      </article>
+    </section>
+    <script>
+      (function () {
+        var count = 0;
+        var countEl = document.getElementById("count");
+        var meta = document.getElementById("meta");
+        function theme() {
+          return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        }
+        function paint() {
+          var current = theme();
+          countEl.textContent = String(count);
+          meta.textContent = 'data-theme="' + current + '"' + (current === "dark" ? " .dark" : "");
+          document.getElementById("light").className = "btn " + (current === "light" ? "btn-primary" : "btn-quiet");
+          document.getElementById("dark").className = "btn " + (current === "dark" ? "btn-primary" : "btn-quiet");
+        }
+        function setTheme(next) {
+          document.documentElement.setAttribute("data-theme", next);
+          document.documentElement.classList.toggle("dark", next === "dark");
+          try { localStorage.setItem("theme", next); } catch (e) {}
+          paint();
+        }
+        document.getElementById("plus").addEventListener("click", function () { count += 1; paint(); });
+        document.getElementById("minus").addEventListener("click", function () { count -= 1; paint(); });
+        document.getElementById("light").addEventListener("click", function () { setTheme("light"); });
+        document.getElementById("dark").addEventListener("click", function () { setTheme("dark"); });
+        paint();
+      })();
+    </script>
+  </body>
+</html>

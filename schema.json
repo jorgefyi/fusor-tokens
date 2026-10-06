@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusor.dev/schemas/fusor-tokens.config.json",
+  "title": "fusor-tokens config",
+  "description": "Configuration for the fusor-tokens CLI. CSS variables only; light and dark themes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tokens", "outFile", "engine", "themeAttribute", "themes", "prefix"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema URL or path. The CLI writes ./node_modules/fusor-tokens/schema.json."
+    },
+    "tokens": {
+      "type": "array",
+      "description": "Globs for DTCG token JSON files, relative to the app root.",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "outFile": {
+      "type": "string",
+      "description": "CSS file written by build. Fusor copies it when assets points at its directory.",
+      "minLength": 1,
+      "examples": ["public/tokens.css"]
+    },
+    "engine": {
+      "description": "Token engine. MVP ships terrazzo. style-dictionary is reserved.",
+      "enum": ["terrazzo", "style-dictionary"]
+    },
+    "themeAttribute": {
+      "type": "string",
+      "description": "HTML attribute that selects a theme. Default data-theme.",
+      "minLength": 1,
+      "examples": ["data-theme"]
+    },
+    "themes": {
+      "type": "array",
+      "description": "Theme names. The first is the :root default. A theme named dark also emits the .dark class.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "prefix": {
+      "type": "string",
+      "description": "CSS variable prefix without leading dashes. ft becomes --ft-.",
+      "pattern": "^[A-Za-z][A-Za-z0-9-]*$"
+    }
+  }
+}

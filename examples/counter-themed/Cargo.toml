@@ -1,0 +1,16 @@
+[package]
+name = "counter-themed"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Fusor app sketch that consumes fusor-tokens CSS variables."
+
+# Host `cargo check` compiles src/lib.rs only. src/theme.rs is the wasm toggle
+# sketch and is not a crate module until a Fusor app wires it up.
+
+[package.metadata.fusor]
+entry = "web/index.html"
+assets = "public"
+assets-build = ["npx fusor-tokens build"]
+output = "dist"
+base-path = "/"

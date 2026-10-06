@@ -1,0 +1,54 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "Fusor Tokens",
+  "version": "2025.10",
+  "resolutionOrder": [
+    {
+      "$ref": "#/sets/foundation"
+    },
+    {
+      "$ref": "#/modifiers/theme"
+    }
+  ],
+  "sets": {
+    "foundation": {
+      "sources": [
+        {
+          "$ref": "../tokens/color.tokens.json"
+        },
+        {
+          "$ref": "../tokens/radius.tokens.json"
+        },
+        {
+          "$ref": "../tokens/shadow.tokens.json"
+        },
+        {
+          "$ref": "../tokens/space.tokens.json"
+        },
+        {
+          "$ref": "../tokens/typography.tokens.json"
+        },
+        {
+          "$ref": "../tokens/semantic.tokens.json"
+        }
+      ]
+    }
+  },
+  "modifiers": {
+    "theme": {
+      "default": "light",
+      "contexts": {
+        "light": [
+          {
+            "$ref": "../tokens/themes/light.tokens.json"
+          }
+        ],
+        "dark": [
+          {
+            "$ref": "../tokens/themes/dark.tokens.json"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "color": {
+    "bg": {
+      "$type": "color",
+      "$value": "{color.gray.12}",
+      "subtle": { "$type": "color", "$value": "{color.gray.11}" },
+      "muted": { "$type": "color", "$value": "{color.gray.10}" }
+    },
+    "fg": {
+      "$type": "color",
+      "$value": "{color.gray.0}",
+      "muted": { "$type": "color", "$value": "{color.gray.4}" },
+      "subtle": { "$type": "color", "$value": "{color.gray.6}" }
+    },
+    "border": {
+      "$type": "color",
+      "$value": "{color.gray.7}",
+      "strong": { "$type": "color", "$value": "{color.gray.5}" }
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "{color.accent.6}",
+      "fg": { "$type": "color", "$value": "{color.gray.12}" }
+    },
+    "danger": { "$type": "color", "$value": "{color.danger.6}" },
+    "success": { "$type": "color", "$value": "{color.success.6}" },
+    "warning": { "$type": "color", "$value": "{color.warning.6}" },
+    "focus": {
+      "ring": { "$type": "color", "$value": "{color.accent.6}" }
+    }
+  }
+}

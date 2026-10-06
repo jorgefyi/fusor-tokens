@@ -1,0 +1,14 @@
+{
+  "name": "counter-themed",
+  "private": true,
+  "description": "Example Fusor app wired to fusor-tokens. The file: dependency points at this repo.",
+  "scripts": {
+    "tokens:build": "fusor-tokens build",
+    "tokens:check": "fusor-tokens check"
+  },
+  "devDependencies": {
+    "@terrazzo/cli": "^2.7.1",
+    "@terrazzo/plugin-css": "^2.7.1",
+    "fusor-tokens": "file:../.."
+  }
+}
