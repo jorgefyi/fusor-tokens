@@ -38,11 +38,7 @@
     "theme": {
       "default": "light",
       "contexts": {
-        "light": [
-          {
-            "$ref": "../tokens/themes/light.tokens.json"
-          }
-        ],
+        "light": [],
         "dark": [
           {
             "$ref": "../tokens/themes/dark.tokens.json"

@@ -72,7 +72,7 @@ base-path = "/"
 
 ```html
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -96,16 +96,18 @@ base-path = "/"
 </html>
 ```
 
-Put the theme on `<html>` with `data-theme` and keep `.dark` in sync. Use Fusor `class:name` for component state, not for the theme switch. See `examples/counter-themed` for the Cargo metadata, the HTML links, a FOUC script, and a Rust toggle sketch.
+Leave `data-theme` unset until the reader picks a theme. `tokens.css` then follows `prefers-color-scheme: dark` on `:root:not([data-theme="light"])`. An explicit `data-theme="light"` stays light even when the OS is dark. When a theme is stored, put it on `<html>` and keep `.dark` in sync. Use Fusor `class:name` for component state, not for the theme switch. See `examples/counter-themed` for the Cargo metadata, the HTML links, a FOUC script, and a Rust toggle sketch.
 
-Only semantic colors change per theme. Space, radius, type, and shadow stay on `:root`.
+`tokens/semantic.tokens.json` is the light theme. `tokens/themes/dark.tokens.json` overrides the semantic colors for dark. There is no second copy of the light file. Space, radius, and type stay on `:root`. Shadow offset and blur stay shared; the shadow color (`color.shadow.sm`, `md`, `lg`) changes per theme so the lift is still visible on a dark background.
+
+`color.warning` is a fill and badge color. Text uses `color.warning.fg` (`--ft-color-warning-fg`): `warning.11` in light, `warning.9` in dark, because `warning.11` on the dark background is about 2.6:1. Light `color.fg.subtle` is about 3.5:1 against `color.bg`, so it is for captions and metadata, not body text. Body copy uses `color.fg` or `color.fg.muted`.
 
 ```css
 body {
   margin: 0;
   background: var(--ft-color-bg);
   color: var(--ft-color-fg);
-  font: var(--ft-font-weight-regular) var(--ft-font-size-2) / var(--ft-lineHeight-normal)
+  font: var(--ft-font-weight-regular) var(--ft-font-size-2) / var(--ft-line-height-normal)
     var(--ft-font-family-sans);
 }
 ```
@@ -126,11 +128,11 @@ body {
 }
 ```
 
-Token ids become variables by replacing `.` with `-`: `color.bg` → `--ft-color-bg`, `lineHeight.normal` → `--ft-lineHeight-normal`.
+Token ids become variables by replacing `.` with `-`: `color.bg` → `--ft-color-bg`, `line-height.normal` → `--ft-line-height-normal`. Group names are kebab-case, matching the CSS custom properties.
 
 ## Engine
 
-Terrazzo (`@terrazzo/cli` and `@terrazzo/plugin-css`) is the default. `init` writes a DTCG 2025.10 resolver and a CSS plugin config with `input: { theme: "light" | "dark" }` permutations. The CLI then normalizes the stylesheet so aliases resolve to the authored `oklch()` values and the dark block only repeats variables that changed.
+Terrazzo (`@terrazzo/cli` and `@terrazzo/plugin-css`) is the default. `init` writes a DTCG 2025.10 resolver and a CSS plugin config with `input: { theme: "light" | "dark" }` permutations. The light context is empty: `semantic.tokens.json` in the foundation set is the light source of truth. The CLI then normalizes the stylesheet so aliases resolve to the authored `oklch()` values, the dark block only repeats variables that changed, and the same dark diff is repeated under `@media (prefers-color-scheme: dark)` for `:root:not([data-theme="light"])`.
 
 Style Dictionary is a possible later engine (`usesDtcg`, two selectors or a custom format). Setting `"engine": "style-dictionary"` fails with a clear error in this MVP. A sketch:
 

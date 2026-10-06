@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { SEMANTIC_COLOR_IDS, TOKEN_TYPES } from "./constants.js";
+import { SEMANTIC_COLOR_IDS, SHADOW_COLOR_IDS, TOKEN_TYPES } from "./constants.js";
 
 const ALIAS = /^\{([A-Za-z0-9_.-]+)\}$/;
 
@@ -193,15 +193,18 @@ export function validateTokenSet(cwd, config) {
   const foundationMap = assertAliasesResolve(foundationTokens, "tokens");
 
   const ids = new Set(foundationMap.keys());
-  for (const theme of config.themes) {
+  const overlays = new Map();
+  for (const [index, theme] of config.themes.entries()) {
     const file = themes.get(theme);
-    if (!file) {
+    if (!file && index !== 0) {
       throw new Error(
         `Missing tokens/themes/${theme}.tokens.json for theme "${theme}".`,
       );
     }
     const overlay = new Map(foundationMap);
-    for (const token of loaded.get(file)) overlay.set(token.id, token);
+    if (file) {
+      for (const token of loaded.get(file)) overlay.set(token.id, token);
+    }
     assertAliasesResolve([...overlay.values()], `theme ${theme}`);
     for (const id of SEMANTIC_COLOR_IDS) {
       const token = overlay.get(id);
@@ -216,8 +219,54 @@ export function validateTokenSet(cwd, config) {
         throw new Error(`Theme "${theme}" token ${id} does not resolve {${target}}.`);
       }
     }
+    assertDistinctRoles(overlay, theme);
     for (const id of overlay.keys()) ids.add(id);
+    overlays.set(theme, overlay);
+  }
+
+  const baseTheme = config.themes[0];
+  if (overlays.has("dark") && overlays.has(baseTheme)) {
+    for (const id of SHADOW_COLOR_IDS) {
+      const light = leafValue(overlays.get(baseTheme).get(id), overlays.get(baseTheme));
+      const dark = leafValue(overlays.get("dark").get(id), overlays.get("dark"));
+      if (light == null || dark == null) {
+        throw new Error(`Missing shadow tint ${id}.`);
+      }
+      if (JSON.stringify(light) === JSON.stringify(dark)) {
+        throw new Error(`${id} is identical in ${baseTheme} and dark, so the shadow disappears on one of them.`);
+      }
+    }
   }
 
   return { files, ids: [...ids].sort() };
+}
+
+function leafValue(token, map) {
+  if (!token) return undefined;
+  let current = token;
+  const seen = new Set();
+  while (current) {
+    const target = aliasTarget(typeof current.$value === "string" ? current.$value : "");
+    if (!target || seen.has(current.id) || !map.has(target)) return current.$value;
+    seen.add(current.id);
+    current = map.get(target);
+  }
+  return undefined;
+}
+
+function assertDistinctRoles(overlay, theme) {
+  const ring = leafValue(overlay.get("color.focus.ring"), overlay);
+  const accent = leafValue(overlay.get("color.accent"), overlay);
+  if (ring != null && accent != null && JSON.stringify(ring) === JSON.stringify(accent)) {
+    throw new Error(
+      `Theme "${theme}" focus ring resolves to the same color as accent.`,
+    );
+  }
+  const warningFg = leafValue(overlay.get("color.warning.fg"), overlay);
+  const warning = leafValue(overlay.get("color.warning"), overlay);
+  if (warningFg != null && warning != null && JSON.stringify(warningFg) === JSON.stringify(warning)) {
+    throw new Error(
+      `Theme "${theme}" warning.fg resolves to the same color as warning.`,
+    );
+  }
 }

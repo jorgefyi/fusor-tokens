@@ -29,6 +29,8 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   assert.match(io.text(), /link rel="stylesheet" href="\/tokens\.css"/);
   assert.equal(fs.existsSync(path.join(cwd, "fusor-tokens.config.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, "tokens/themes/dark.tokens.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, "tokens/themes/light.tokens.json")), false);
+  assert.equal(fs.existsSync(path.join(cwd, "tokens/semantic.tokens.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, "public")), true);
   assert.equal(fs.existsSync(path.join(cwd, ".fusor-tokens/terrazzo.config.ts")), true);
   const cargo = fs.readFileSync(path.join(cwd, "Cargo.toml"), "utf8");
@@ -64,18 +66,26 @@ test("build and check produce light and dark --ft variables", async () => {
   assert.match(css, /--ft-space-4: 16px;/);
   assert.match(css, /--ft-radius-md: 8px;/);
   assert.match(css, /--ft-font-size-2: 14px;/);
-  assert.match(css, /--ft-lineHeight-normal: 1\.5;/);
+  assert.match(css, /--ft-line-height-normal: 1\.5;/);
   assert.match(css, /--ft-font-family-sans: system-ui, -apple-system, "Segoe UI", sans-serif;/);
   assert.match(css, /--ft-shadow-md: 0 4px 12px oklch\(18% 0\.02 260 \/ 0\.12\);/);
-  assert.doesNotMatch(css, /--ft-line-height-/);
+  assert.match(css, /--ft-color-warning-fg: oklch\(46% 0\.12 85\);/);
+  assert.match(css, /--ft-color-focus-ring: oklch\(70% 0\.16 264\);/);
+  assert.doesNotMatch(css, /--ft-lineHeight-/);
 
-  const dark = css.split('[data-theme="dark"], .dark')[1];
+  const dark = css.split('[data-theme="dark"], .dark')[1].split("@media")[0];
   assert.match(dark, /--ft-color-bg: oklch\(18% 0\.02 260\);/);
   assert.match(dark, /--ft-color-fg: oklch\(99% 0\.005 260\);/);
   assert.match(dark, /--ft-color-accent: oklch\(70% 0\.16 264\);/);
+  assert.match(dark, /--ft-color-focus-ring: oklch\(92% 0\.04 264\);/);
+  assert.match(dark, /--ft-color-border: oklch\(36% 0\.018 260\);/);
+  assert.match(dark, /--ft-color-border-strong: oklch\(52% 0\.016 260\);/);
+  assert.match(dark, /--ft-color-warning-fg: oklch\(68% 0\.15 85\);/);
+  assert.match(dark, /--ft-shadow-md: 0 4px 12px oklch\(99% 0\.005 260 \/ 0\.10\);/);
   assert.doesNotMatch(dark, /--ft-space-1/);
-  assert.doesNotMatch(dark, /--ft-shadow-md/);
   assert.doesNotMatch(dark, /--ft-font-/);
+  assert.match(css, /@media \(prefers-color-scheme: dark\)/);
+  assert.match(css, /:root:not\(\[data-theme="light"\]\)/);
 
   const second = fs.readFileSync(cssPath, "utf8");
   const rebuild = capture();
@@ -90,6 +100,17 @@ test("build and check produce light and dark --ft variables", async () => {
 
   const broken = path.join(cwd, "tokens/themes/dark.tokens.json");
   const original = fs.readFileSync(broken, "utf8");
+  fs.writeFileSync(
+    broken,
+    original.replace(
+      '"ring": { "$type": "color", "$value": "{color.accent.3}" }',
+      '"ring": { "$type": "color", "$value": "{color.accent.6}" }',
+    ),
+  );
+  const sameRing = capture();
+  assert.equal(await run(["check", "--cwd", cwd], sameRing), 1);
+  assert.match(sameRing.error(), /focus ring/);
+  assert.equal(fs.readFileSync(cssPath, "utf8"), before);
   fs.writeFileSync(broken, original.replace("{color.gray.12}", "{color.gray.missing}"));
   const bad = capture();
   assert.equal(await run(["check", "--cwd", cwd], bad), 1);

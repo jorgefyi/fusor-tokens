@@ -1,4 +1,4 @@
-/** Semantic color tokens. Only these change between light and dark. */
+/** Semantic color tokens that must resolve in every theme. */
 export const SEMANTIC_COLOR_IDS = [
   "color.bg",
   "color.bg.subtle",
@@ -13,8 +13,12 @@ export const SEMANTIC_COLOR_IDS = [
   "color.danger",
   "color.success",
   "color.warning",
+  "color.warning.fg",
   "color.focus.ring",
 ];
+
+/** Shadow tints. Geometry stays put; these colors change per theme. */
+export const SHADOW_COLOR_IDS = ["color.shadow.sm", "color.shadow.md", "color.shadow.lg"];
 
 export const TOKEN_TYPES = new Set([
   "color",

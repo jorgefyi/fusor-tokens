@@ -21,6 +21,14 @@ export function assertCss(css, config) {
   if (config.themes.includes("dark")) {
     const dark = selectorFor("dark", config.themes.indexOf("dark"), config.themeAttribute);
     if (!css.includes(dark)) throw new Error(`CSS is missing selector ${dark}.`);
+    const explicit = config.themes[0];
+    if (!css.includes("@media (prefers-color-scheme: dark)")) {
+      throw new Error("CSS is missing the prefers-color-scheme: dark fallback.");
+    }
+    const system = `:root:not([${config.themeAttribute}="${explicit}"])`;
+    if (!css.includes(system)) {
+      throw new Error(`CSS is missing ${system}, so an explicit light theme cannot opt out of the system scheme.`);
+    }
   }
   if (!css.includes(`--${config.prefix}-`)) {
     throw new Error(`CSS is missing --${config.prefix}- variables.`);

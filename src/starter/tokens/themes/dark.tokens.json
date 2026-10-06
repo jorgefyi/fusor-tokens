@@ -15,8 +15,8 @@
     },
     "border": {
       "$type": "color",
-      "$value": "{color.gray.7}",
-      "strong": { "$type": "color", "$value": "{color.gray.5}" }
+      "$value": "{color.gray.10}",
+      "strong": { "$type": "color", "$value": "{color.gray.8}" }
     },
     "accent": {
       "$type": "color",
@@ -25,9 +25,23 @@
     },
     "danger": { "$type": "color", "$value": "{color.danger.6}" },
     "success": { "$type": "color", "$value": "{color.success.6}" },
-    "warning": { "$type": "color", "$value": "{color.warning.6}" },
+    "warning": {
+      "$type": "color",
+      "$description": "Fill and badge color. Do not use this for text.",
+      "$value": "{color.warning.6}",
+      "fg": {
+        "$type": "color",
+        "$description": "Warning text on bg and bg.subtle. warning.11 is too dim on dark bg.",
+        "$value": "{color.warning.9}"
+      }
+    },
     "focus": {
-      "ring": { "$type": "color", "$value": "{color.accent.6}" }
+      "ring": { "$type": "color", "$value": "{color.accent.3}" }
+    },
+    "shadow": {
+      "sm": { "$type": "color", "$value": "oklch(99% 0.005 260 / 0.07)" },
+      "md": { "$type": "color", "$value": "oklch(99% 0.005 260 / 0.10)" },
+      "lg": { "$type": "color", "$value": "oklch(99% 0.005 260 / 0.14)" }
     }
   }
 }

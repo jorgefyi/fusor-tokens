@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -39,6 +39,7 @@
           <div class="swatch success">Success <span>color.success</span></div>
           <div class="swatch warning">Warning <span>color.warning</span></div>
         </div>
+        <p class="warn-copy">Cutoff in 2 hours. This line uses color.warning.fg.</p>
         <p class="meta" id="meta"></p>
       </article>
     </section>
@@ -47,15 +48,23 @@
         var count = 0;
         var countEl = document.getElementById("count");
         var meta = document.getElementById("meta");
+        function systemDark() {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
         function theme() {
-          return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+          var attr = document.documentElement.getAttribute("data-theme");
+          if (attr === "dark" || attr === "light") return attr;
+          return systemDark() ? "dark" : "light";
         }
         function paint() {
+          var attr = document.documentElement.getAttribute("data-theme");
           var current = theme();
           countEl.textContent = String(count);
-          meta.textContent = 'data-theme="' + current + '"' + (current === "dark" ? " .dark" : "");
-          document.getElementById("light").className = "btn " + (current === "light" ? "btn-primary" : "btn-quiet");
-          document.getElementById("dark").className = "btn " + (current === "dark" ? "btn-primary" : "btn-quiet");
+          meta.textContent = attr === "light" || attr === "dark"
+            ? 'data-theme="' + attr + '"' + (attr === "dark" ? " .dark" : "")
+            : "system (" + current + ")";
+          document.getElementById("light").className = "btn " + (attr === "light" ? "btn-primary" : "btn-quiet");
+          document.getElementById("dark").className = "btn " + (attr === "dark" ? "btn-primary" : "btn-quiet");
         }
         function setTheme(next) {
           document.documentElement.setAttribute("data-theme", next);
@@ -67,6 +76,7 @@
         document.getElementById("minus").addEventListener("click", function () { count -= 1; paint(); });
         document.getElementById("light").addEventListener("click", function () { setTheme("light"); });
         document.getElementById("dark").addEventListener("click", function () { setTheme("dark"); });
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
         paint();
       })();
     </script>

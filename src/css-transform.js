@@ -12,7 +12,7 @@ function fusorCssValue(token, options) {
     case "dimension":
       return fusorDimension(token.$value);
     case "shadow":
-      return fusorShadow(token);
+      return fusorShadow(token, tokensSet);
     case "fontFamily":
       return fusorFontFamily(token.$value);
     case "fontWeight":
@@ -61,20 +61,36 @@ function fusorDimension(value) {
   return undefined;
 }
 
-function fusorShadow(token) {
-  const raw = (token.originalValue && token.originalValue.$value) || token.$value;
-  const layers = Array.isArray(raw) ? raw : [raw];
-  return layers.map(fusorShadowLayer).join(", ");
+function fusorShadow(token, tokensSet) {
+  const authored = token.originalValue && token.originalValue.$value;
+  const authoredLayers = authored ? (Array.isArray(authored) ? authored : [authored]) : [];
+  const resolved = token.$value;
+  const resolvedLayers = Array.isArray(resolved) ? resolved : [resolved];
+  const count = Math.max(authoredLayers.length, resolvedLayers.length);
+  const layers = [];
+  for (let i = 0; i < count; i++) {
+    layers.push(fusorShadowLayer(authoredLayers[i] || resolvedLayers[i], resolvedLayers[i], tokensSet));
+  }
+  return layers.join(", ");
 }
 
-function fusorShadowLayer(layer) {
+function fusorShadowLayer(authored, resolved, tokensSet) {
+  const layer = authored || resolved || {};
   const parts = [];
   if (layer.inset === true) parts.push("inset");
   parts.push(fusorZero(layer.offsetX), fusorZero(layer.offsetY), fusorLength(layer.blur));
   if (layer.spread != null && !fusorIsZero(layer.spread)) parts.push(fusorLength(layer.spread));
-  const color = typeof layer.color === "string" ? layer.color : fusorSerializeColor(layer.color);
-  parts.push(color);
+  parts.push(fusorShadowColor(layer.color, resolved && resolved.color, tokensSet));
   return parts.filter(Boolean).join(" ");
+}
+
+function fusorShadowColor(authoredColor, resolvedColor, tokensSet) {
+  if (typeof authoredColor === "string") {
+    const match = /^\{([A-Za-z0-9_.-]+)\}$/.exec(authoredColor.trim());
+    if (match && tokensSet[match[1]]) return fusorColor(tokensSet[match[1]], tokensSet);
+    if (authoredColor.trim().charAt(0) !== "{") return authoredColor.trim();
+  }
+  return fusorSerializeColor(resolvedColor);
 }
 
 function fusorIsZero(value) {

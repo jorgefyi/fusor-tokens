@@ -4,7 +4,7 @@
     "sm": {
       "$type": "shadow",
       "$value": {
-        "color": "oklch(18% 0.02 260 / 0.08)",
+        "color": "{color.shadow.sm}",
         "offsetX": "0px",
         "offsetY": "1px",
         "blur": "2px",
@@ -14,7 +14,7 @@
     "md": {
       "$type": "shadow",
       "$value": {
-        "color": "oklch(18% 0.02 260 / 0.12)",
+        "color": "{color.shadow.md}",
         "offsetX": "0px",
         "offsetY": "4px",
         "blur": "12px",
@@ -24,7 +24,7 @@
     "lg": {
       "$type": "shadow",
       "$value": {
-        "color": "oklch(18% 0.02 260 / 0.18)",
+        "color": "{color.shadow.lg}",
         "offsetX": "0px",
         "offsetY": "12px",
         "blur": "32px",

@@ -25,9 +25,23 @@
     },
     "danger": { "$type": "color", "$value": "{color.danger.9}" },
     "success": { "$type": "color", "$value": "{color.success.9}" },
-    "warning": { "$type": "color", "$value": "{color.warning.9}" },
+    "warning": {
+      "$type": "color",
+      "$description": "Fill and badge color. Do not use this for text.",
+      "$value": "{color.warning.9}",
+      "fg": {
+        "$type": "color",
+        "$description": "Warning text on bg and bg.subtle.",
+        "$value": "{color.warning.11}"
+      }
+    },
     "focus": {
       "ring": { "$type": "color", "$value": "{color.accent.6}" }
+    },
+    "shadow": {
+      "sm": { "$type": "color", "$value": "oklch(18% 0.02 260 / 0.08)" },
+      "md": { "$type": "color", "$value": "oklch(18% 0.02 260 / 0.12)" },
+      "lg": { "$type": "color", "$value": "oklch(18% 0.02 260 / 0.18)" }
     }
   }
 }
