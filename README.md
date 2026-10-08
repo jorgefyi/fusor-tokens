@@ -1,26 +1,34 @@
-# Fusor Tokens
+# Tesso
 
-[![npm](https://img.shields.io/npm/v/fusor-tokens)](https://www.npmjs.com/package/fusor-tokens)
+[![npm](https://img.shields.io/npm/v/tesso-ui)](https://www.npmjs.com/package/tesso-ui)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Fusor Tokens is a small CLI that turns [DTCG](https://www.designtokens.org/) design tokens into `public/tokens.css` and wires that file into a [Fusor](https://github.com/fusor-rs/fusor) app’s `[package.metadata.fusor] assets-build`, so light and dark themes ship with `fusor build` and `fusor dev`.
+Tesso is a small CLI that turns [DTCG](https://www.designtokens.org/) design tokens into `public/tokens.css` and copies accessible, token-based components into a [Fusor](https://github.com/fusor-rs/fusor) app. You own the files it writes. The npm package is `tesso-ui`. The binary is `tesso`.
 
-The output is CSS variables prefixed `--ft-`. This package ships tokens only, with no components and no Tailwind theme.
+The output is CSS variables prefixed `--tesso-`. Components style themselves only with those variables and work in light and dark.
 
 ## Quick start
 
 ```bash
-npm install --save-dev fusor-tokens @terrazzo/cli @terrazzo/plugin-css
-npx fusor-tokens init
+npm install --save-dev tesso-ui @terrazzo/cli @terrazzo/plugin-css
+npx tesso-ui init
+npx tesso-ui add button
 fusor dev
 ```
 
-Then add `<link rel="stylesheet" href="/tokens.css" />` to your `<head>`.
+Then add the stylesheets to `<head>`:
+
+```html
+<link rel="stylesheet" href="/tokens.css" />
+<link rel="stylesheet" href="/tesso.css" />
+```
+
+`npx tesso-ui` and `tesso` run the same binary.
 
 ## Install
 
 ```bash
-npm install --save-dev fusor-tokens @terrazzo/cli @terrazzo/plugin-css
+npm install --save-dev tesso-ui @terrazzo/cli @terrazzo/plugin-css
 ```
 
 Node 20 or newer is required. Rust apps stay Node-free until they opt in with `init`.
@@ -30,39 +38,104 @@ Node 20 or newer is required. Rust apps stay Node-free until they opt in with `i
 From a Fusor app root:
 
 ```bash
-npx fusor-tokens init
+npx tesso-ui init
 ```
 
 `init` writes:
 
-- `fusor-tokens.config.json`
+- `tesso.config.json`
 - a starter `tokens/` DTCG set (primitives, semantic aliases, light and dark)
-- `.fusor-tokens/terrazzo.config.ts` (committed; Terrazzo is the engine)
+- `.tesso/terrazzo.config.ts` (committed; Terrazzo is the engine)
 - `public/`
-- npm devDependencies for Terrazzo
-- `[package.metadata.fusor]` keys `assets = "public"` and `assets-build = ["npx", "fusor-tokens", "build"]` when they are missing
+- npm devDependencies for Terrazzo and `tesso-ui`
+- `[package.metadata.fusor]` keys `assets = "public"` and `assets-build = ["npx", "tesso-ui", "build"]` when they are missing
 
-> **Heads-up:** the `.gitignore` that `fusor new` creates includes `/.fusor-*/`, which also ignores `.fusor-tokens/`. Add `!/.fusor-tokens/` to your `.gitignore` so the Terrazzo config gets committed. This is tracked upstream in [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23).
+`.tesso/` is outside Fusor's default `/.fusor-*/` gitignore, so the Terrazzo config can be committed without an extra exception. That ignore is tracked upstream in [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23).
 
-It does **not** call `fusor add`. Add the stylesheet in `<head>`:
+It does **not** call `fusor add`. Add the stylesheets in `<head>`:
 
 ```html
 <link rel="stylesheet" href="/tokens.css" />
+<link rel="stylesheet" href="/tesso.css" />
 ```
 
 To change a color, edit it in `tokens/color.tokens.json` (for example `color.accent.9`), then rebuild:
 
 ```bash
-npx fusor-tokens build
+npx tesso-ui build
 ```
 
 `build` validates the config, runs Terrazzo, and writes `public/tokens.css`. It is safe to run twice. `check` validates DTCG, asserts every semantic color resolves, and asserts the CSS would be non-empty without writing `public/tokens.css`.
 
 ```bash
-npx fusor-tokens check
+npx tesso-ui check
 ```
 
 Commit `public/tokens.css` so a Fusor build without Node still has the last stylesheet. `assets-build` refreshes it when Node is available.
+
+`build` and `check` do not move a leftover `.fusor-tokens/` folder. They stop and tell you to run `tesso init --migrate`. That keeps `fusor dev` from moving files on its own. The hook also runs twice ([fusor-rs/fusor#21](https://github.com/fusor-rs/fusor/issues/21)); the build stays idempotent.
+
+## Components
+
+```bash
+npx tesso-ui list
+npx tesso-ui add button card dialog
+```
+
+`add` copies each component's HTML and Rust into the app, appends its CSS to `public/tesso.css`, declares the module in `src/lib.rs`, and adds a `use` in `src/app.rs` when those files exist. It also links `/tesso.css` after `/tokens.css` when that link is missing. It prints what it wrote and a short wiring snippet.
+
+It does not replace a file that is already there unless you pass `--overwrite`. If any requested component already has a file, `add` writes none of that component's files and exits 1. A dependency that is already complete is left in place. An unknown name writes nothing.
+
+Components require `"prefix": "tesso"`. A different prefix would not match the copied CSS.
+
+The parent module that owns the page template must import each component (`use crate::button::Button`). HTML files do not import each other. Component tags are PascalCase and need an explicit closing tag. They sit inside a native HTML element.
+
+### Button
+
+```html
+<Button variant="primary" size="md" on_press="{{ state.save.clone() }}">Save</Button>
+```
+
+`variant` is `primary`, `secondary`, `quiet`, or `danger`. `size` is `sm`, `md`, or `lg`. Both are `&'static str` literals. `on_press` is `Rc<dyn Fn()>`. Fusor component tags cannot take `on:click` (that attribute is only for native elements), so the copied button calls `on:click` on its own `<button>` and the page passes the callback. Keyboard focus draws a ring from `--tesso-color-focus-ring`.
+
+### Card
+
+```html
+<Card title="Shift" description="A short line under the title.">
+  <!-- body -->
+</Card>
+```
+
+`title` and `description` are `&'static str`. The body is the single `<Children>` slot.
+
+### Dialog
+
+```html
+<Dialog
+  open="{{ state.dialog_open.clone() }}"
+  title="Reset the counter?"
+  description="This sets the count back to zero."
+>
+  <Button variant="quiet" size="md" on_press="{{ state.cancel.clone() }}">Cancel</Button>
+</Dialog>
+```
+
+`open` is a `Signal<bool>` the page owns. Closing the dialog, including Escape and a backdrop click, sets it back to false. `title` and `description` are static strings.
+
+The component renders a native `<dialog>` and calls `showModal()` while `open` is true, and `close()` when it becomes false. The browser then:
+
+- traps focus inside the topmost dialog
+- closes only that dialog on Escape when one dialog opens another, so the dialog underneath stays open
+- makes the rest of the page inert
+- paints the dialog in the top layer, so a parent with `transform` or `overflow` cannot clip it or bury it
+
+The element sets `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`. `::backdrop` uses `--tesso-color-fg`. A click on the dialog outside the panel sets `open` to false, and so does the Close button.
+
+Focus returns to the control that opened the dialog. Safari and Firefox do not focus a button on click, and the browser would put focus back on `<body>`, so Dialog records the `pointerdown` target and uses it when the focused element is `<body>` or `<html>`.
+
+The browser gives each modal dialog its own close watcher when a user gesture opens it. A button inside one dialog opening the next is that gesture, so Escape closes only the top dialog. Two dialogs opened with no new gesture between them share a watcher group, and one Escape closes the group.
+
+Fusor has no element ref. `dialog.rs` looks up `[data-tesso-dialog]` once when `open` becomes true. If that node is not mounted yet, it tries again on the next turn, not on a polling timer. Which dialog is on top, which element is the opener, and whether the page behind is inert live in `dialog_a11y.rs` and are covered by `cargo test`. `add dialog` adds the `web-sys` features this uses (`HtmlDialogElement`, `HtmlElement`, `Node`, and the listener types). fusor-core does not enable them.
 
 ## Fusor wiring
 
@@ -70,12 +143,12 @@ Commit `public/tokens.css` so a Fusor build without Node still has the last styl
 [package.metadata.fusor]
 entry = "web/index.html"
 assets = "public"
-assets-build = ["npx", "fusor-tokens", "build"]
+assets-build = ["npx", "tesso-ui", "build"]
 output = "dist"
 base-path = "/"
 ```
 
-`assets-build` is the kebab-case form of fusor-build’s `assets_build`: one program and its arguments, run in the package without a shell before Fusor copies `assets` into the build output. Write each argument as its own string; `["npx fusor-tokens build"]` fails with `could not run npx fusor-tokens build: No such file or directory`.
+`assets-build` is the kebab-case form of fusor-build’s `assets_build`: one program and its arguments, run in the package without a shell before Fusor copies `assets` into the build output. Write each argument as its own string; `["npx tesso-ui build"]` fails with `could not run npx tesso-ui build: No such file or directory` ([fusor-rs/fusor#20](https://github.com/fusor-rs/fusor/issues/20)).
 
 ```html
 <!doctype html>
@@ -94,6 +167,7 @@ base-path = "/"
       })();
     </script>
     <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/tesso.css" />
     <link rel="stylesheet" href="/app.css" />
     <title>My Fusor App</title>
   </head>
@@ -109,41 +183,47 @@ Leave `data-theme` unset until the reader picks a theme. `tokens.css` then follo
 
 `tokens/semantic.tokens.json` is the light theme. `tokens/themes/dark.tokens.json` overrides the semantic colors for dark. There is no second copy of the light file. Space, radius, and type stay on `:root`. Shadow offset and blur stay shared; the shadow color (`color.shadow.sm`, `md`, `lg`) changes per theme so the lift is still visible on a dark background.
 
-`color.warning` is a fill and badge color. Text uses `color.warning.fg` (`--ft-color-warning-fg`): `warning.11` in light, `warning.9` in dark, because `warning.11` on the dark background is about 2.6:1. Light `color.fg.subtle` is about 3.5:1 against `color.bg`, so it is for captions and metadata, not body text. Body copy uses `color.fg` or `color.fg.muted`.
+`color.warning` is a fill and badge color. Text uses `color.warning.fg` (`--tesso-color-warning-fg`): `warning.11` in light, `warning.9` in dark, because `warning.11` on the dark background is about 2.6:1. Light `color.fg.subtle` is about 3.5:1 against `color.bg`, so it is for captions and metadata, not body text. Body copy uses `color.fg` or `color.fg.muted`.
 
 ```css
 body {
   margin: 0;
-  background: var(--ft-color-bg);
-  color: var(--ft-color-fg);
-  font: var(--ft-font-weight-regular) var(--ft-font-size-2) / var(--ft-line-height-normal)
-    var(--ft-font-family-sans);
+  background: var(--tesso-color-bg);
+  color: var(--tesso-color-fg);
+  font: var(--tesso-font-weight-regular) var(--tesso-font-size-2) / var(--tesso-line-height-normal)
+    var(--tesso-font-family-sans);
 }
 ```
 
 ## Config
 
-`fusor-tokens.config.json` matches `schema.json`:
+`tesso.config.json` matches `schema.json`:
 
 ```json
 {
-  "$schema": "./node_modules/fusor-tokens/schema.json",
+  "$schema": "./node_modules/tesso-ui/schema.json",
   "tokens": ["tokens/**/*.tokens.json"],
   "outFile": "public/tokens.css",
   "engine": "terrazzo",
   "themeAttribute": "data-theme",
   "themes": ["light", "dark"],
-  "prefix": "ft"
+  "prefix": "tesso"
 }
 ```
 
-Token ids become variables by replacing `.` with `-`: `color.bg` → `--ft-color-bg`, `line-height.normal` → `--ft-line-height-normal`. Group names are kebab-case, matching the CSS custom properties.
+Token ids become variables by replacing `.` with `-`: `color.bg` → `--tesso-color-bg`, `line-height.normal` → `--tesso-line-height-normal`. Group names are kebab-case, matching the CSS custom properties.
+
+An optional `registry` key is an `http` or `https` URL. `add` and `list` reject it for now and tell you the built-in document has the same shape. Omit the key to use the registry shipped in the package (`registry/registry.json`, `registryUrl: null`).
+
+## Registry
+
+Each item names its files, the path they are copied to, CSS appended to `public/tesso.css`, Rust modules, component dependencies, and the DTCG ids the CSS needs. `dialog` depends on `button` and asks for the `web-sys` features `showModal()` uses, including `HtmlDialogElement`. A later release can fetch this document from a URL without changing the item shape.
 
 ## Engine
 
 Terrazzo (`@terrazzo/cli` and `@terrazzo/plugin-css`) is the default. `init` writes a DTCG 2025.10 resolver and a CSS plugin config with `input: { theme: "light" | "dark" }` permutations. The light context is empty: `semantic.tokens.json` in the foundation set is the light source of truth. The CLI then normalizes the stylesheet so aliases resolve to the authored `oklch()` values, the dark block only repeats variables that changed, and the same dark diff is repeated under `@media (prefers-color-scheme: dark)` for `:root:not([data-theme="light"])`.
 
-Style Dictionary is a possible later engine (`usesDtcg`, two selectors or a custom format). Setting `"engine": "style-dictionary"` fails with a clear error in this MVP. A sketch:
+Style Dictionary is a possible later engine (`usesDtcg`, two selectors or a custom format). Setting `"engine": "style-dictionary"` fails with a clear error. A sketch:
 
 ```json
 {
@@ -164,6 +244,45 @@ Style Dictionary is a possible later engine (`usesDtcg`, two selectors or a cust
 }
 ```
 
+## Migrating from fusor-tokens
+
+Tesso is the new name for fusor-tokens. Your tokens and themes carry over as they are. What changes is the package name, the config file and folder, and the CSS prefix, and one command handles all of it.
+
+**1. Run the migration from your app root.**
+
+```bash
+npx tesso-ui init
+```
+
+When it finds `.fusor-tokens/` or `fusor-tokens.config.json`, it asks before moving anything. In CI or any terminal without a prompt, use `npx tesso-ui init --migrate` instead.
+
+**2. Install the new package.** `init` already swapped `fusor-tokens` for `tesso-ui` in your `package.json`, so this just fetches it.
+
+```bash
+npm install
+```
+
+**3. Check that everything moved.**
+
+| fusor-tokens | Tesso |
+| --- | --- |
+| package `fusor-tokens` | package `tesso-ui` |
+| command `fusor-tokens` | command `tesso` |
+| `fusor-tokens.config.json` | `tesso.config.json` |
+| `.fusor-tokens/` | `.tesso/` |
+| `--ft-color-bg` and friends | `--tesso-color-bg` and friends |
+| `assets-build = ["npx", "fusor-tokens", "build"]` | `assets-build = ["npx", "tesso-ui", "build"]` |
+
+**Good to know**
+
+- `--ft-` is rewritten in `.css`, `.html`, `.rs`, `.js`, `.mjs` and `.md` files, except under `node_modules`, `target`, `dist`, `.git`, `.tmp`, `tokens/`, and hidden directories other than `.tesso`. If you use the variables anywhere else, such as `.ts` or `.scss`, search for leftovers with `grep -rn -- "--ft-" . --exclude-dir=node_modules`.
+- `assets-build` is updated when it is `["npx", "fusor-tokens", "build"]` or `["npx","fusor-tokens","build"]`. Any other value is left in place, and `init` prints a note so you can point it at `tesso-ui` yourself.
+- If you set your own `prefix` in the config, Tesso keeps that prefix and does not rewrite `--ft-`. The folder, config file, package name, and default `assets-build` still move.
+- Token JSON files are never touched.
+- `tesso build` and `tesso check` won't run while the old folder or config is still there. They stop and tell you to run `tesso init --migrate`.
+- If you added `!/.fusor-tokens/` to your `.gitignore`, you can delete that line. `.tesso/` isn't caught by Fusor's default ignore rule.
+- `fusor-tokens` 0.1.x keeps working, but it won't get updates.
+
 ## Try the example
 
 ```bash
@@ -172,23 +291,37 @@ npm test
 npm run preview
 ```
 
-`npm run preview` serves [`examples/counter-themed`](examples/counter-themed) at `http://127.0.0.1:44731` (set `PORT` to change it). The page toggles `data-theme` against the committed `public/tokens.css`.
+`npm run preview` serves [`examples/counter-themed`](examples/counter-themed) at `http://127.0.0.1:44731` (set `PORT` to change it). The page toggles `data-theme` against the committed `public/tokens.css` and shows Button, Card, and Dialog. Reset opens the dialog. Escape closes it and returns focus to Reset.
 
 ## Non-goals
 
-No components in this package (a shadcn-style kit built on these tokens is planned separately), no Tailwind or UnoCSS export, no multi-brand themes, no Figma sync, no Rust token runtime, and no crates.io Fusor capability. Tokens are files plus a pre-asset script. The surface is intentionally small for Fusor pre-1.0.
+No Tailwind or UnoCSS export, no multi-brand themes, no Figma sync, no Rust token runtime, and no crates.io Fusor capability. Tokens are files plus a pre-asset script. The registry is bundled; a remote URL is reserved and not fetched yet. The surface is intentionally small for Fusor pre-1.0.
 
 ## Contributing
 
-Issues and pull requests are welcome on [GitHub](https://github.com/jorgefyi/fusor-tokens/issues). To work on the CLI itself:
+Issues and pull requests are welcome on [GitHub](https://github.com/jorgefyi/tesso/issues). To work on the CLI itself:
 
 ```bash
 npm install
-node bin/fusor-tokens.js --help
+node bin/tesso.js --help
 npm test
 ```
 
-Fusor is pre-1.0, so some rough edges live upstream. Limits we've hit so far are filed on [fusor-rs/fusor](https://github.com/fusor-rs/fusor/issues?q=is%3Aissue+author%3Ajorgefyi) (#20 to #24).
+Fusor is pre-1.0. Limits this package works around:
+
+- [fusor-rs/fusor#20](https://github.com/fusor-rs/fusor/issues/20) — `assets-build` is an argv array, not a shell command.
+- [fusor-rs/fusor#21](https://github.com/fusor-rs/fusor/issues/21) — `fusor dev` runs that hook twice.
+- [fusor-rs/fusor#22](https://github.com/fusor-rs/fusor/issues/22) — a Rust char literal such as `'dark'` inside a template is reported as invalid Rust tokens. Use a double-quoted string inside a single-quoted HTML attribute.
+- [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23) — `fusor new` ignores `/.fusor-*/`. Tesso uses `.tesso/` so the pipeline config is not ignored.
+- [fusor-rs/fusor#24](https://github.com/fusor-rs/fusor/issues/24) — `fusor add` cannot copy component source, so `tesso add` does it.
+- `fusor build` does not download its tools. On a fresh machine it exits with `wasm-bindgen 0.2.117 is not available` until you run `fusor install` (or `fusor dev`, which prepares them).
+- Component tags cannot take `on:click`. Pass a callback input, or put the listener on a native element inside the component.
+- A component template has one native HTML root. Dialog's root is the `<dialog>` element. The dimmed page is `::backdrop`, not a second element.
+- There is no element ref. Dialog finds its `<dialog>` with `[data-tesso-dialog]` once when it opens.
+- fusor-core does not enable the `web-sys` features Dialog uses (`HtmlDialogElement`, `HtmlElement`, `Node`, `EventTarget`, and the rest of the listener surface). `add dialog` adds them to the app's `Cargo.toml`.
+- An author `display` rule on `dialog` overrides the user-agent rule `dialog:not([open]) { display: none }`. Dialog sets `display` only on `.tesso-dialog[open]`.
+- A literal component attribute is `&str`, not `String`.
+- `<Children>` appears once per component. The caller's template compiles that slot, so Dialog does not import Button when the page passes buttons as children.
 
 ## License
 

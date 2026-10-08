@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 publish = false
-description = "Fusor app that consumes fusor-tokens CSS variables."
+description = "Fusor app that consumes Tesso tokens and components."
 
 [workspace]
 
@@ -15,7 +15,7 @@ crate-type = ["cdylib", "rlib"]
 fusor-core = { version = "=0.1.5", features = ["dom"] }
 fusor-components = { version = "=0.1.5", features = ["browser"] }
 wasm-bindgen = "=0.2.117"
-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "DomTokenList", "Storage", "MediaQueryList"] }
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "Node", "Event", "EventTarget", "HtmlDialogElement", "DomTokenList", "Storage", "MediaQueryList"] }
 
 [build-dependencies]
 fusor-build = "=0.1.5"
@@ -23,7 +23,7 @@ fusor-build = "=0.1.5"
 [package.metadata.fusor]
 entry = "web/index.html"
 assets = "public"
-assets-build = ["npx", "fusor-tokens", "build"]
+assets-build = ["npx", "tesso-ui", "build"]
 output = "dist"
 base-path = "/"
 

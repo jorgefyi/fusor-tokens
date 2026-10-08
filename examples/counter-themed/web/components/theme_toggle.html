@@ -2,18 +2,18 @@
   <div class="theme" role="group" aria-label="Theme">
     <button
       type="button"
-      class="btn"
-      class:primary='state.theme.get() == "light"'
-      class:quiet='state.theme.get() != "light"'
+      class="tesso-button tesso-button-sm"
+      class:tesso-button-primary='state.theme.get() == "light"'
+      class:tesso-button-quiet='state.theme.get() != "light"'
       on:click="state.set_light()"
     >
       Light
     </button>
     <button
       type="button"
-      class="btn"
-      class:primary='state.theme.get() == "dark"'
-      class:quiet='state.theme.get() != "dark"'
+      class="tesso-button tesso-button-sm"
+      class:tesso-button-primary='state.theme.get() == "dark"'
+      class:tesso-button-quiet='state.theme.get() != "dark"'
       on:click="state.set_dark()"
     >
       Dark

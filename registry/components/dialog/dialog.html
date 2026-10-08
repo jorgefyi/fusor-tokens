@@ -1,0 +1,24 @@
+<template rust:component="Dialog">
+  <dialog
+    class="tesso-dialog"
+    data-tesso-dialog="{{ state.instance_id.as_str() }}"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="{{ state.title_id.as_str() }}"
+    aria-describedby="{{ state.description_id.as_str() }}"
+    on:click="state.on_backdrop_click(&event)"
+    on:cancel="state.on_cancel(&event)"
+    on:close="state.on_native_close()"
+  >
+    <div class="tesso-dialog-panel" data-tesso-dialog-panel="">
+      <h2 id="{{ state.title_id.as_str() }}" class="tesso-dialog-title">{{ state.title }}</h2>
+      <p id="{{ state.description_id.as_str() }}" class="tesso-dialog-description">{{ state.description }}</p>
+      <div class="tesso-dialog-body">
+        <Children></Children>
+      </div>
+      <button type="button" class="tesso-button tesso-button-quiet tesso-button-sm tesso-dialog-close" aria-label="Close" on:click="state.close()">
+        Close
+      </button>
+    </div>
+  </dialog>
+</template>

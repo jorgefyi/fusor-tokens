@@ -1,0 +1,127 @@
+{
+  "name": "tesso",
+  "version": "0.2.0",
+  "homepage": "https://github.com/jorgefyi/tesso",
+  "registryUrl": null,
+  "items": [
+    {
+      "name": "button",
+      "title": "Button",
+      "description": "Button with primary, secondary, quiet, and danger variants, sm/md/lg sizes, and a visible focus ring.",
+      "dependencies": [],
+      "tokens": [
+        "color.bg",
+        "color.fg",
+        "color.bg.muted",
+        "color.border.strong",
+        "color.accent",
+        "color.accent.fg",
+        "color.danger",
+        "color.focus.ring",
+        "space.1",
+        "space.2",
+        "space.3",
+        "space.4",
+        "space.5",
+        "space.8",
+        "space.10",
+        "space.12",
+        "radius.md",
+        "font.family.sans",
+        "font.size.1",
+        "font.size.2",
+        "font.size.3",
+        "font.weight.medium",
+        "line-height.tight"
+      ],
+      "files": [
+        { "source": "button/button.html", "target": "web/components/button.html" },
+        { "source": "button/button.rs", "target": "src/button.rs" }
+      ],
+      "css": { "source": "button/button.css", "target": "public/tesso.css", "marker": "button" },
+      "rustModules": [
+        { "module": "button", "use": "use crate::button::Button;" }
+      ]
+    },
+    {
+      "name": "card",
+      "title": "Card",
+      "description": "Surface with a title, description, and a children slot for the body.",
+      "dependencies": [],
+      "tokens": [
+        "color.bg.subtle",
+        "color.fg",
+        "color.fg.muted",
+        "color.border",
+        "space.2",
+        "space.4",
+        "space.6",
+        "radius.lg",
+        "shadow.md",
+        "font.size.2",
+        "font.size.4",
+        "font.weight.semibold",
+        "line-height.tight",
+        "line-height.normal"
+      ],
+      "files": [
+        { "source": "card/card.html", "target": "web/components/card.html" },
+        { "source": "card/card.rs", "target": "src/card.rs" }
+      ],
+      "css": { "source": "card/card.css", "target": "public/tesso.css", "marker": "card" },
+      "rustModules": [
+        { "module": "card", "use": "use crate::card::Card;" }
+      ]
+    },
+    {
+      "name": "dialog",
+      "title": "Dialog",
+      "description": "Native modal dialog. Top layer, inert page, Escape closes the top dialog, and focus returns to the opener.",
+      "dependencies": ["button"],
+      "tokens": [
+        "color.bg.subtle",
+        "color.fg",
+        "color.fg.muted",
+        "color.border",
+        "space.2",
+        "space.3",
+        "space.4",
+        "space.6",
+        "space.8",
+        "space.12",
+        "radius.lg",
+        "shadow.lg",
+        "font.family.sans",
+        "font.size.2",
+        "font.size.4",
+        "font.weight.regular",
+        "font.weight.semibold",
+        "line-height.tight",
+        "line-height.normal"
+      ],
+      "files": [
+        { "source": "dialog/dialog.html", "target": "web/components/dialog.html" },
+        { "source": "dialog/dialog.rs", "target": "src/dialog.rs" },
+        { "source": "dialog/dialog_a11y.rs", "target": "src/dialog_a11y.rs" }
+      ],
+      "css": { "source": "dialog/dialog.css", "target": "public/tesso.css", "marker": "dialog" },
+      "rustModules": [
+        { "module": "dialog_a11y" },
+        { "module": "dialog", "use": "use crate::dialog::Dialog;" }
+      ],
+      "cargo": {
+        "webSysFeatures": [
+          "Window",
+          "Document",
+          "Element",
+          "HtmlElement",
+          "Node",
+          "Event",
+          "EventTarget",
+          "HtmlDialogElement",
+          "DomTokenList"
+        ]
+      }
+    }
+  ]
+}

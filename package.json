@@ -1,27 +1,28 @@
 {
-  "name": "fusor-tokens",
-  "version": "0.1.1",
-  "description": "Turn DTCG design tokens into public/tokens.css and wire them into a Fusor app.",
+  "name": "tesso-ui",
+  "version": "0.2.0",
+  "description": "DTCG design tokens and accessible components for Fusor. The CLI is tesso.",
   "license": "MIT",
   "author": "jorgefyi",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jorgefyi/fusor-tokens.git"
+    "url": "git+https://github.com/jorgefyi/tesso.git"
   },
-  "homepage": "https://github.com/jorgefyi/fusor-tokens#readme",
+  "homepage": "https://github.com/jorgefyi/tesso#readme",
   "bugs": {
-    "url": "https://github.com/jorgefyi/fusor-tokens/issues"
+    "url": "https://github.com/jorgefyi/tesso/issues"
   },
   "keywords": [
     "design-tokens",
     "dtcg",
     "css-variables",
     "fusor",
-    "terrazzo"
+    "terrazzo",
+    "tesso"
   ],
   "type": "module",
   "bin": {
-    "fusor-tokens": "./bin/fusor-tokens.js"
+    "tesso": "./bin/tesso.js"
   },
   "exports": {
     ".": "./src/cli.js",
@@ -30,17 +31,20 @@
   "files": [
     "bin",
     "src",
+    "registry",
     "schema.json",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test",
-    "build:example": "node bin/fusor-tokens.js build --cwd examples/counter-themed",
-    "check:example": "node bin/fusor-tokens.js check --cwd examples/counter-themed",
+    "test": "node --test && cargo test --manifest-path crates/dialog-a11y/Cargo.toml --quiet",
+    "test:js": "node --test",
+    "build:example": "node bin/tesso.js build --cwd examples/counter-themed",
+    "check:example": "node bin/tesso.js check --cwd examples/counter-themed",
     "preview": "node scripts/preview.mjs"
   },
   "dependencies": {

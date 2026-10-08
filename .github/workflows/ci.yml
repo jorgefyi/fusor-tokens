@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: npm test
+
+  fusor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: wasm32-unknown-unknown
+      - run: npm ci
+      - name: Install Fusor 0.1.5
+        run: curl -fsSL https://fusor.build/install.sh | sh
+        env:
+          FUSOR_VERSION: v0.1.5
+      - name: Build the example
+        working-directory: examples/counter-themed
+        run: |
+          npm install
+          export PATH="$HOME/.fusor/bin:$PATH"
+          fusor install
+          fusor build

@@ -2,9 +2,11 @@ import { SEMANTIC_COLOR_IDS } from "../constants.js";
 import { readConfig } from "../config.js";
 import { selectorFor } from "../css.js";
 import { validateTokenSet } from "../dtcg.js";
+import { assertNoLegacy } from "../migrate.js";
 import { compileCssToTemp } from "../pipeline.js";
 
 export async function checkCommand(cwd, { stdout }) {
+  assertNoLegacy(cwd);
   const config = readConfig(cwd);
   const { files, ids } = validateTokenSet(cwd, config);
   const css = await compileCssToTemp(cwd, config, files, ids);

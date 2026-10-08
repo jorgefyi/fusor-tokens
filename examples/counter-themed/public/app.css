@@ -21,11 +21,11 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(1200px 500px at 10% -10%, var(--ft-color-bg-muted), transparent 60%),
-    var(--ft-color-bg);
-  color: var(--ft-color-fg);
-  font: var(--ft-font-weight-regular) var(--ft-font-size-2) / var(--ft-line-height-normal)
-    var(--ft-font-family-sans);
+    radial-gradient(1200px 500px at 10% -10%, var(--tesso-color-bg-muted), transparent 60%),
+    var(--tesso-color-bg);
+  color: var(--tesso-color-fg);
+  font: var(--tesso-font-weight-regular) var(--tesso-font-size-2) / var(--tesso-line-height-normal)
+    var(--tesso-font-family-sans);
 }
 
 button,
@@ -37,46 +37,17 @@ input {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: var(--ft-space-4);
+  padding: var(--tesso-space-4);
 }
 
-.panel {
+.shell .tesso-card {
   width: min(100%, 28rem);
-  background: var(--ft-color-bg-subtle);
-  color: var(--ft-color-fg);
-  border: 1px solid var(--ft-color-border);
-  border-radius: var(--ft-radius-lg);
-  box-shadow: var(--ft-shadow-md);
-  padding: var(--ft-space-6);
-}
-
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--ft-space-3);
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--ft-color-fg-muted);
-  font-family: var(--ft-font-family-mono);
-  font-size: var(--ft-font-size-1);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  font-size: var(--ft-font-size-4);
-  font-weight: var(--ft-font-weight-semibold);
-  line-height: var(--ft-line-height-tight);
 }
 
 .count {
-  margin: var(--ft-space-5) 0 var(--ft-space-4);
+  margin: 0;
   font-size: 4.5rem;
-  font-weight: var(--ft-font-weight-semibold);
+  font-weight: var(--tesso-font-weight-semibold);
   letter-spacing: -0.04em;
   line-height: 0.95;
   font-variant-numeric: tabular-nums;
@@ -85,95 +56,61 @@ h1 {
 .row,
 .theme {
   display: flex;
-  gap: var(--ft-space-2);
-}
-
-.theme {
-  margin-top: var(--ft-space-4);
-}
-
-.btn {
-  appearance: none;
-  border: 1px solid var(--ft-color-border-strong);
-  background: var(--ft-color-bg);
-  color: var(--ft-color-fg);
-  border-radius: var(--ft-radius-md);
-  padding: var(--ft-space-2) var(--ft-space-4);
-  font-weight: var(--ft-font-weight-medium);
-  cursor: pointer;
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--ft-color-focus-ring);
-  outline-offset: 2px;
-}
-
-.btn-primary,
-.btn.primary {
-  background: var(--ft-color-accent);
-  color: var(--ft-color-accent-fg);
-  border-color: transparent;
-}
-
-.btn-quiet,
-.btn.quiet {
-  background: var(--ft-color-bg-muted);
-  color: var(--ft-color-fg);
+  gap: var(--tesso-space-2);
 }
 
 .swatches {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--ft-space-2);
-  margin-top: var(--ft-space-5);
+  gap: var(--tesso-space-2);
 }
 
 .swatch {
-  border-radius: var(--ft-radius-sm);
-  padding: var(--ft-space-2) var(--ft-space-3);
-  font-size: var(--ft-font-size-1);
-  font-weight: var(--ft-font-weight-medium);
+  border-radius: var(--tesso-radius-sm);
+  padding: var(--tesso-space-2) var(--tesso-space-3);
+  font-size: var(--tesso-font-size-1);
+  font-weight: var(--tesso-font-weight-medium);
 }
 
 .swatch span {
   display: block;
-  font-family: var(--ft-font-family-mono);
-  font-weight: var(--ft-font-weight-regular);
+  font-family: var(--tesso-font-family-mono);
+  font-weight: var(--tesso-font-weight-regular);
   opacity: 0.8;
 }
 
 .swatch.danger {
-  background: var(--ft-color-danger);
-  color: var(--ft-color-gray-0);
+  background: var(--tesso-color-danger);
+  color: var(--tesso-color-gray-0);
 }
 
 .swatch.success {
-  background: var(--ft-color-success);
-  color: var(--ft-color-gray-0);
+  background: var(--tesso-color-success);
+  color: var(--tesso-color-gray-0);
 }
 
 .swatch.warning {
-  background: var(--ft-color-warning);
-  color: var(--ft-color-gray-12);
+  background: var(--tesso-color-warning);
+  color: var(--tesso-color-gray-12);
 }
 
 .warn-copy {
-  margin: var(--ft-space-3) 0 0;
-  color: var(--ft-color-warning-fg);
-  font-size: var(--ft-font-size-2);
-  line-height: var(--ft-line-height-normal);
+  margin: 0;
+  color: var(--tesso-color-warning-fg);
+  font-size: var(--tesso-font-size-2);
+  line-height: var(--tesso-line-height-normal);
 }
 
 .meta {
-  margin: var(--ft-space-4) 0 0;
-  color: var(--ft-color-fg-subtle);
-  font-family: var(--ft-font-family-mono);
-  font-size: var(--ft-font-size-1);
+  margin: 0;
+  color: var(--tesso-color-fg-subtle);
+  font-family: var(--tesso-font-family-mono);
+  font-size: var(--tesso-font-size-1);
 }
 
 @media (max-width: 480px) {
-  .panel {
-    padding: var(--ft-space-4);
+  .shell .tesso-card {
+    padding: var(--tesso-space-4);
   }
 
   .count {
@@ -185,7 +122,8 @@ h1 {
     flex-direction: column;
   }
 
-  .btn {
+  .row .tesso-button,
+  .theme .tesso-button {
     width: 100%;
   }
 }

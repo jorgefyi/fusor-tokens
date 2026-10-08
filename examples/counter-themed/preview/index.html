@@ -14,40 +14,72 @@
       })();
     </script>
     <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/tesso.css" />
     <link rel="stylesheet" href="/app.css" />
     <link rel="icon" href="/favicon.svg" />
     <title>Shift counter</title>
   </head>
   <body>
     <section class="shell">
-      <article class="panel">
-        <header class="panel-head">
-          <p class="eyebrow">Fusor tokens</p>
-          <h1>Shift</h1>
+      <article class="tesso-card">
+        <header class="tesso-card-header">
+          <h2 class="tesso-card-title">Shift</h2>
+          <p class="tesso-card-description">A Fusor counter styled with Tesso tokens.</p>
         </header>
-        <p class="count" id="count" aria-live="polite">0</p>
-        <div class="row">
-          <button type="button" class="btn btn-quiet" id="minus">Minus</button>
-          <button type="button" class="btn btn-primary" id="plus">Plus</button>
+        <div class="tesso-card-body">
+          <p class="count" id="count" aria-live="polite">0</p>
+          <div class="row">
+            <button type="button" class="tesso-button tesso-button-quiet tesso-button-md" id="minus">Minus</button>
+            <button type="button" class="tesso-button tesso-button-primary tesso-button-md" id="plus">Plus</button>
+          </div>
+          <div class="theme" role="group" aria-label="Theme">
+            <button type="button" class="tesso-button tesso-button-sm" id="light">Light</button>
+            <button type="button" class="tesso-button tesso-button-sm" id="dark">Dark</button>
+          </div>
+          <div class="row">
+            <button type="button" class="tesso-button tesso-button-secondary tesso-button-sm" id="reset">Reset</button>
+          </div>
+          <div class="swatches" aria-hidden="true">
+            <div class="swatch danger">Danger <span>color.danger</span></div>
+            <div class="swatch success">Success <span>color.success</span></div>
+            <div class="swatch warning">Warning <span>color.warning</span></div>
+          </div>
+          <p class="warn-copy">Cutoff in 2 hours. This line uses color.warning.fg.</p>
+          <p class="meta" id="meta"></p>
         </div>
-        <div class="theme" role="group" aria-label="Theme">
-          <button type="button" class="btn" id="light" data-theme-choice="light">Light</button>
-          <button type="button" class="btn" id="dark" data-theme-choice="dark">Dark</button>
-        </div>
-        <div class="swatches" aria-hidden="true">
-          <div class="swatch danger">Danger <span>color.danger</span></div>
-          <div class="swatch success">Success <span>color.success</span></div>
-          <div class="swatch warning">Warning <span>color.warning</span></div>
-        </div>
-        <p class="warn-copy">Cutoff in 2 hours. This line uses color.warning.fg.</p>
-        <p class="meta" id="meta"></p>
       </article>
     </section>
+    <dialog class="tesso-dialog" id="dialog" data-tesso-dialog="preview" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+      <div class="tesso-dialog-panel" data-tesso-dialog-panel="">
+        <h2 id="dialog-title" class="tesso-dialog-title">Reset the counter?</h2>
+        <p id="dialog-description" class="tesso-dialog-description">This sets the count back to zero. You can keep counting after.</p>
+        <div class="tesso-dialog-body">
+          <button type="button" class="tesso-button tesso-button-quiet tesso-button-md" id="cancel">Cancel</button>
+          <button type="button" class="tesso-button tesso-button-danger tesso-button-md" id="confirm">Reset count</button>
+          <button type="button" class="tesso-button tesso-button-secondary tesso-button-md" id="why">Why?</button>
+        </div>
+        <button type="button" class="tesso-button tesso-button-quiet tesso-button-sm tesso-dialog-close" id="close" aria-label="Close">Close</button>
+      </div>
+    </dialog>
+    <dialog class="tesso-dialog" id="details" data-tesso-dialog="preview-details" role="dialog" aria-modal="true" aria-labelledby="details-title" aria-describedby="details-description">
+      <div class="tesso-dialog-panel" data-tesso-dialog-panel="">
+        <h2 id="details-title" class="tesso-dialog-title">Reset is local</h2>
+        <p id="details-description" class="tesso-dialog-description">This only clears the count in this tab. The rest of the page stays as it is.</p>
+        <div class="tesso-dialog-body">
+          <button type="button" class="tesso-button tesso-button-primary tesso-button-md" id="details-ok">OK</button>
+        </div>
+        <button type="button" class="tesso-button tesso-button-quiet tesso-button-sm tesso-dialog-close" id="details-close" aria-label="Close">Close</button>
+      </div>
+    </dialog>
     <script>
       (function () {
         var count = 0;
         var countEl = document.getElementById("count");
         var meta = document.getElementById("meta");
+        var dialog = document.getElementById("dialog");
+        var details = document.getElementById("details");
+        var openers = new WeakMap();
+        var pointer = null;
         function systemDark() {
           return window.matchMedia("(prefers-color-scheme: dark)").matches;
         }
@@ -63,8 +95,8 @@
           meta.textContent = attr === "light" || attr === "dark"
             ? 'data-theme="' + attr + '"' + (attr === "dark" ? " .dark" : "")
             : "system (" + current + ")";
-          document.getElementById("light").className = "btn " + (attr === "light" ? "btn-primary" : "btn-quiet");
-          document.getElementById("dark").className = "btn " + (attr === "dark" ? "btn-primary" : "btn-quiet");
+          document.getElementById("light").className = "tesso-button tesso-button-sm " + (attr === "light" ? "tesso-button-primary" : "tesso-button-quiet");
+          document.getElementById("dark").className = "tesso-button tesso-button-sm " + (attr === "dark" ? "tesso-button-primary" : "tesso-button-quiet");
         }
         function setTheme(next) {
           document.documentElement.setAttribute("data-theme", next);
@@ -72,10 +104,70 @@
           try { localStorage.setItem("theme", next); } catch (e) {}
           paint();
         }
+        function usable(element, dialogEl) {
+          if (!element || !element.isConnected || element === document.body || element === document.documentElement) return false;
+          return !dialogEl.contains(element);
+        }
+        function remember(dialogEl) {
+          var active = document.activeElement;
+          var chosen = usable(active, dialogEl) ? active : (usable(pointer, dialogEl) ? pointer : null);
+          openers.set(dialogEl, chosen);
+        }
+        function restore(dialogEl) {
+          var chosen = openers.get(dialogEl);
+          openers.delete(dialogEl);
+          if (chosen && chosen.isConnected && !dialogEl.contains(chosen)) chosen.focus();
+        }
+        function syncLock() {
+          var any = dialog.open || details.open;
+          document.documentElement.classList.toggle("tesso-dialog-open", any);
+        }
+        function openDialog(dialogEl) {
+          if (dialogEl.open) return;
+          remember(dialogEl);
+          dialogEl.showModal();
+          syncLock();
+        }
+        function closeDialog(dialogEl) {
+          if (dialogEl.open) dialogEl.close();
+          restore(dialogEl);
+          syncLock();
+        }
+        document.addEventListener("pointerdown", function (event) {
+          var node = event.target;
+          if (node && node.nodeType !== 1) node = node.parentElement;
+          while (node && node !== document.body) {
+            var tag = node.tagName;
+            if (tag === "BUTTON" || tag === "A" || tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") {
+              pointer = node;
+              break;
+            }
+            node = node.parentElement;
+          }
+        }, true);
+        function onCancel(event) {
+          event.preventDefault();
+          closeDialog(event.currentTarget);
+        }
+        dialog.addEventListener("cancel", onCancel);
+        details.addEventListener("cancel", onCancel);
+        dialog.addEventListener("click", function (event) {
+          if (event.target === dialog) closeDialog(dialog);
+        });
+        details.addEventListener("click", function (event) {
+          if (event.target === details) closeDialog(details);
+        });
         document.getElementById("plus").addEventListener("click", function () { count += 1; paint(); });
         document.getElementById("minus").addEventListener("click", function () { count -= 1; paint(); });
         document.getElementById("light").addEventListener("click", function () { setTheme("light"); });
         document.getElementById("dark").addEventListener("click", function () { setTheme("dark"); });
+        document.getElementById("reset").addEventListener("click", function () { openDialog(dialog); });
+        document.getElementById("cancel").addEventListener("click", function () { closeDialog(dialog); });
+        document.getElementById("close").addEventListener("click", function () { closeDialog(dialog); });
+        document.getElementById("confirm").addEventListener("click", function () { count = 0; closeDialog(dialog); paint(); });
+        document.getElementById("why").addEventListener("click", function () { openDialog(details); });
+        document.getElementById("details-ok").addEventListener("click", function () { closeDialog(details); });
+        document.getElementById("details-close").addEventListener("click", function () { closeDialog(details); });
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
         paint();
       })();

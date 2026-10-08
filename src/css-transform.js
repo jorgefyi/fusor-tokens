@@ -1,5 +1,5 @@
 /**
- * Inlined into .fusor-tokens/terrazzo.config.ts.
+ * Inlined into .tesso/terrazzo.config.ts.
  * Returns concrete CSS so alias vars are not emitted as var(ft-…)
  * (the CSS plugin drops the leading dashes on custom variableName results).
  */

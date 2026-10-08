@@ -6,7 +6,7 @@ test("appends fusor metadata when the section is missing", () => {
   const { text, notes } = patchCargoToml(`[package]\nname = "demo"\n`);
   assert.match(text, /\[package\.metadata\.fusor\]/);
   assert.match(text, /assets = "public"/);
-  assert.match(text, /assets-build = \["npx", "fusor-tokens", "build"\]/);
+  assert.match(text, /assets-build = \["npx", "tesso-ui", "build"\]/);
   assert.ok(notes.some((note) => note.includes("package.metadata.fusor")));
 });
 
@@ -18,7 +18,7 @@ assets = "static"
   const { text } = patchCargoToml(source);
   assert.match(text, /assets = "static"/);
   assert.doesNotMatch(text, /assets = "public"/);
-  assert.match(text, /assets-build = \["npx", "fusor-tokens", "build"\]/);
+  assert.match(text, /assets-build = \["npx", "tesso-ui", "build"\]/);
 });
 
 test("leaves an existing assets-build command alone", () => {
@@ -40,6 +40,6 @@ output = "dist"
 opt-level = "s"
 `;
   const once = patchCargoToml(source).text;
-  assert.match(once, /output = "dist"\nassets-build = \["npx", "fusor-tokens", "build"\]\n\n\[profile\.release\]/);
+  assert.match(once, /output = "dist"\nassets-build = \["npx", "tesso-ui", "build"\]\n\n\[profile\.release\]/);
   assert.equal(patchCargoToml(once).text, once);
 });

@@ -1,0 +1,16 @@
+<template rust:component="Button">
+  <button
+    type="button"
+    class="tesso-button"
+    class:tesso-button-primary='state.variant == "primary"'
+    class:tesso-button-secondary='state.variant == "secondary"'
+    class:tesso-button-quiet='state.variant == "quiet"'
+    class:tesso-button-danger='state.variant == "danger"'
+    class:tesso-button-sm='state.size == "sm"'
+    class:tesso-button-md='state.size == "md"'
+    class:tesso-button-lg='state.size == "lg"'
+    on:click="state.press()"
+  >
+    <Children></Children>
+  </button>
+</template>
