@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import { CONFIG_FILENAME } from "./constants.js";
 
 const THEME_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
 const PREFIX_NAME = /^[A-Za-z][A-Za-z0-9-]*$/;
 
-export const CONFIG_FILENAME = "fusor-tokens.config.json";
+export { CONFIG_FILENAME };
 
 export function configPath(cwd) {
   return path.join(cwd, CONFIG_FILENAME);
@@ -14,7 +15,7 @@ export function readConfig(cwd) {
   const file = configPath(cwd);
   if (!fs.existsSync(file)) {
     throw new Error(
-      `Missing ${CONFIG_FILENAME}. Run fusor-tokens init in the app root.`,
+      `Missing ${CONFIG_FILENAME}. Run tesso init in the app root.`,
     );
   }
   let json;
@@ -28,7 +29,7 @@ export function readConfig(cwd) {
 
 export function validateConfig(json) {
   if (!json || typeof json !== "object" || Array.isArray(json)) {
-    throw new Error("fusor-tokens.config.json must be a JSON object.");
+    throw new Error("tesso.config.json must be a JSON object.");
   }
   const allowed = new Set([
     "$schema",
@@ -38,6 +39,7 @@ export function validateConfig(json) {
     "themeAttribute",
     "themes",
     "prefix",
+    "registry",
   ]);
   for (const key of Object.keys(json)) {
     if (!allowed.has(key)) {
@@ -84,6 +86,13 @@ export function validateConfig(json) {
     throw new Error(
       'Config "prefix" must start with a letter and contain only letters, numbers, or "-".',
     );
+  }
+  if (json.registry != null) {
+    if (typeof json.registry !== "string" || !/^https?:\/\//i.test(json.registry)) {
+      throw new Error(
+        'Config "registry" must be an http(s) URL. Omit it to use the registry shipped with tesso-ui.',
+      );
+    }
   }
   return json;
 }

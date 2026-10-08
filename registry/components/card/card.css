@@ -1,0 +1,36 @@
+.tesso-card {
+  background: var(--tesso-color-bg-subtle);
+  color: var(--tesso-color-fg);
+  border: 1px solid var(--tesso-color-border);
+  border-radius: var(--tesso-radius-lg);
+  box-shadow: var(--tesso-shadow-md);
+  padding: var(--tesso-space-6);
+}
+
+.tesso-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tesso-space-2);
+  margin-bottom: var(--tesso-space-4);
+}
+
+.tesso-card-title {
+  margin: 0;
+  color: var(--tesso-color-fg);
+  font-size: var(--tesso-font-size-4);
+  font-weight: var(--tesso-font-weight-semibold);
+  line-height: var(--tesso-line-height-tight);
+}
+
+.tesso-card-description {
+  margin: 0;
+  color: var(--tesso-color-fg-muted);
+  font-size: var(--tesso-font-size-2);
+  line-height: var(--tesso-line-height-normal);
+}
+
+.tesso-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tesso-space-4);
+}

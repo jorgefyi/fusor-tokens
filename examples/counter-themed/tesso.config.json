@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/fusor-tokens/schema.json",
+  "$schema": "./node_modules/tesso-ui/schema.json",
   "tokens": [
     "tokens/**/*.tokens.json"
   ],
@@ -10,5 +10,5 @@
     "light",
     "dark"
   ],
-  "prefix": "ft"
+  "prefix": "tesso"
 }

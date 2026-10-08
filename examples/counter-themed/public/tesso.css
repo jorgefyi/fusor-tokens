@@ -1,0 +1,184 @@
+/* tesso:button */
+.tesso-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tesso-space-2);
+  min-height: var(--tesso-space-10);
+  padding: var(--tesso-space-2) var(--tesso-space-4);
+  border: 1px solid var(--tesso-color-border-strong);
+  border-radius: var(--tesso-radius-md);
+  background: var(--tesso-color-bg);
+  color: var(--tesso-color-fg);
+  font: var(--tesso-font-weight-medium) var(--tesso-font-size-2) / var(--tesso-line-height-tight)
+    var(--tesso-font-family-sans);
+  cursor: pointer;
+}
+
+.tesso-button:focus {
+  outline: none;
+}
+
+.tesso-button:focus-visible {
+  outline: 2px solid var(--tesso-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.tesso-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tesso-button-primary {
+  background: var(--tesso-color-accent);
+  color: var(--tesso-color-accent-fg);
+  border-color: transparent;
+}
+
+.tesso-button-secondary {
+  background: var(--tesso-color-bg);
+  color: var(--tesso-color-fg);
+  border-color: var(--tesso-color-border-strong);
+}
+
+.tesso-button-quiet {
+  background: var(--tesso-color-bg-muted);
+  color: var(--tesso-color-fg);
+  border-color: transparent;
+}
+
+.tesso-button-danger {
+  background: var(--tesso-color-danger);
+  color: var(--tesso-color-accent-fg);
+  border-color: transparent;
+}
+
+.tesso-button-sm {
+  min-height: var(--tesso-space-8);
+  padding: var(--tesso-space-1) var(--tesso-space-3);
+  font-size: var(--tesso-font-size-1);
+}
+
+.tesso-button-lg {
+  min-height: var(--tesso-space-12);
+  padding: var(--tesso-space-3) var(--tesso-space-5);
+  font-size: var(--tesso-font-size-3);
+}
+/* /tesso:button */
+
+/* tesso:card */
+.tesso-card {
+  background: var(--tesso-color-bg-subtle);
+  color: var(--tesso-color-fg);
+  border: 1px solid var(--tesso-color-border);
+  border-radius: var(--tesso-radius-lg);
+  box-shadow: var(--tesso-shadow-md);
+  padding: var(--tesso-space-6);
+}
+
+.tesso-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tesso-space-2);
+  margin-bottom: var(--tesso-space-4);
+}
+
+.tesso-card-title {
+  margin: 0;
+  color: var(--tesso-color-fg);
+  font-size: var(--tesso-font-size-4);
+  font-weight: var(--tesso-font-weight-semibold);
+  line-height: var(--tesso-line-height-tight);
+}
+
+.tesso-card-description {
+  margin: 0;
+  color: var(--tesso-color-fg-muted);
+  font-size: var(--tesso-font-size-2);
+  line-height: var(--tesso-line-height-normal);
+}
+
+.tesso-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tesso-space-4);
+}
+/* /tesso:card */
+
+/* tesso:dialog */
+.tesso-dialog-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--tesso-space-4);
+}
+
+.tesso-dialog-root[hidden] {
+  display: none;
+}
+
+.tesso-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklch, var(--tesso-color-fg) 40%, transparent);
+}
+
+.tesso-dialog-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc(var(--tesso-space-12) * 10));
+  max-height: calc(100vh - var(--tesso-space-8));
+  overflow: auto;
+  padding: var(--tesso-space-6);
+  background: var(--tesso-color-bg-subtle);
+  color: var(--tesso-color-fg);
+  border: 1px solid var(--tesso-color-border);
+  border-radius: var(--tesso-radius-lg);
+  box-shadow: var(--tesso-shadow-lg);
+}
+
+.tesso-dialog-panel:focus {
+  outline: none;
+}
+
+.tesso-dialog-panel:focus-visible {
+  outline: 2px solid var(--tesso-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.tesso-dialog-title {
+  margin: 0;
+  padding-right: var(--tesso-space-12);
+  font-size: var(--tesso-font-size-4);
+  font-weight: var(--tesso-font-weight-semibold);
+  line-height: var(--tesso-line-height-tight);
+}
+
+.tesso-dialog-description {
+  margin: var(--tesso-space-2) 0 0;
+  color: var(--tesso-color-fg-muted);
+  font: var(--tesso-font-weight-regular) var(--tesso-font-size-2) / var(--tesso-line-height-normal)
+    var(--tesso-font-family-sans);
+}
+
+.tesso-dialog-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tesso-space-2);
+  margin-top: var(--tesso-space-4);
+}
+
+.tesso-dialog-close {
+  position: absolute;
+  top: var(--tesso-space-3);
+  right: var(--tesso-space-3);
+}
+
+html.tesso-dialog-open,
+html.tesso-dialog-open body {
+  overflow: hidden;
+}
+/* /tesso:dialog */

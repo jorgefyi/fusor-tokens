@@ -1,0 +1,11 @@
+<template rust:component="Card">
+  <article class="tesso-card">
+    <header class="tesso-card-header">
+      <h2 class="tesso-card-title">{{ state.title }}</h2>
+      <p class="tesso-card-description">{{ state.description }}</p>
+    </header>
+    <div class="tesso-card-body">
+      <Children></Children>
+    </div>
+  </article>
+</template>

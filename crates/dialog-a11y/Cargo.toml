@@ -1,0 +1,9 @@
+[package]
+name = "tesso-dialog-a11y"
+version = "0.2.0"
+edition = "2021"
+publish = false
+description = "Host-side tests for the dialog focus trap shipped in the Tesso registry."
+
+[lib]
+path = "../../registry/components/dialog/dialog_a11y.rs"

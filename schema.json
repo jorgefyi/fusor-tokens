@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://fusor.dev/schemas/fusor-tokens.config.json",
-  "title": "fusor-tokens config",
-  "description": "Configuration for the fusor-tokens CLI. CSS variables only; light and dark themes.",
+  "$id": "https://github.com/jorgefyi/fusor-tokens/raw/main/schema.json",
+  "title": "tesso config",
+  "description": "Configuration for the tesso CLI. CSS variables for light and dark themes, plus an optional component registry URL.",
   "type": "object",
   "additionalProperties": false,
   "required": ["tokens", "outFile", "engine", "themeAttribute", "themes", "prefix"],
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "JSON Schema URL or path. The CLI writes ./node_modules/fusor-tokens/schema.json."
+      "description": "JSON Schema URL or path. The CLI writes ./node_modules/tesso-ui/schema.json."
     },
     "tokens": {
       "type": "array",
@@ -46,8 +46,13 @@
     },
     "prefix": {
       "type": "string",
-      "description": "CSS variable prefix without leading dashes. ft becomes --ft-.",
+      "description": "CSS variable prefix without leading dashes. tesso becomes --tesso-.",
       "pattern": "^[A-Za-z][A-Za-z0-9-]*$"
+    },
+    "registry": {
+      "type": "string",
+      "description": "Reserved. An http(s) URL returning the same JSON document as the built-in registry. Omit it until remote registries exist.",
+      "pattern": "^https?://.+"
     }
   }
 }

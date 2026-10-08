@@ -14,6 +14,7 @@
       })();
     </script>
     <link rel="stylesheet" href="/tokens.css" />
+    <link rel="stylesheet" href="/tesso.css" />
     <link rel="stylesheet" href="/app.css" />
     <link rel="icon" href="/favicon.svg" />
     <title>Shift counter</title>
@@ -21,19 +22,31 @@
   <body>
     <App state="{{ App::new() }}">
       <section class="shell">
-        <article class="panel">
-          <header class="panel-head">
-            <p class="eyebrow">Fusor tokens</p>
-            <h1>Shift</h1>
-          </header>
+        <Card title="Shift" description="A Fusor counter styled with Tesso tokens.">
           <p class="count" aria-live="polite">{{ state.count.get() }}</p>
           <div class="row">
-            <button type="button" class="btn btn-quiet" on:click="state.decrement()">Minus</button>
-            <button type="button" class="btn btn-primary" on:click="state.increment()">Plus</button>
+            <Button variant="quiet" size="md" on_press="{{ state.decrement.clone() }}">Minus</Button>
+            <Button variant="primary" size="md" on_press="{{ state.increment.clone() }}">Plus</Button>
           </div>
           <ThemeToggle></ThemeToggle>
+          <div class="row">
+            <Button variant="secondary" size="sm" on_press="{{ state.ask_reset.clone() }}">Reset</Button>
+          </div>
+          <div class="swatches" aria-hidden="true">
+            <div class="swatch danger">Danger <span>color.danger</span></div>
+            <div class="swatch success">Success <span>color.success</span></div>
+            <div class="swatch warning">Warning <span>color.warning</span></div>
+          </div>
           <p class="warn-copy">Cutoff in 2 hours. This line uses color.warning.fg.</p>
-        </article>
+        </Card>
+        <Dialog
+          open="{{ state.reset_open.clone() }}"
+          title="Reset the counter?"
+          description="This sets the count back to zero. You can keep counting after."
+        >
+          <Button variant="quiet" size="md" on_press="{{ state.cancel_reset.clone() }}">Cancel</Button>
+          <Button variant="danger" size="md" on_press="{{ state.confirm_reset.clone() }}">Reset count</Button>
+        </Dialog>
       </section>
     </App>
   </body>

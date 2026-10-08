@@ -27,18 +27,18 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   const code = await run(["init", "--no-install", "--cwd", cwd], io);
   assert.equal(code, 0, io.error());
   assert.match(io.text(), /link rel="stylesheet" href="\/tokens\.css"/);
-  assert.equal(fs.existsSync(path.join(cwd, "fusor-tokens.config.json")), true);
+  assert.equal(fs.existsSync(path.join(cwd, "tesso.config.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, "tokens/themes/dark.tokens.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, "tokens/themes/light.tokens.json")), false);
   assert.equal(fs.existsSync(path.join(cwd, "tokens/semantic.tokens.json")), true);
   assert.equal(fs.existsSync(path.join(cwd, "public")), true);
-  assert.equal(fs.existsSync(path.join(cwd, ".fusor-tokens/terrazzo.config.ts")), true);
+  assert.equal(fs.existsSync(path.join(cwd, ".tesso/terrazzo.config.ts")), true);
   const cargo = fs.readFileSync(path.join(cwd, "Cargo.toml"), "utf8");
   assert.match(cargo, /assets = "public"/);
-  assert.match(cargo, /assets-build = \["npx", "fusor-tokens", "build"\]/);
+  assert.match(cargo, /assets-build = \["npx", "tesso-ui", "build"\]/);
   const pkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
   assert.equal(pkg.devDependencies["@terrazzo/cli"], "^2.7.1");
-  assert.equal(pkg.devDependencies["fusor-tokens"], "^0.1.1");
+  assert.equal(pkg.devDependencies["tesso-ui"], "^0.2.0");
 
   const again = capture();
   assert.equal(await run(["init", "--no-install", "--cwd", cwd], again), 0);
@@ -47,7 +47,7 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   assert.equal(cargoAgain.split("assets-build").length, 2);
 });
 
-test("build and check produce light and dark --ft variables", async () => {
+test("build and check produce light and dark --tesso- variables", async () => {
   const cwd = fs.mkdtempSync(path.join(repo, ".tmp", "build-"));
   fs.mkdirSync(cwd, { recursive: true });
   const initIo = capture();
@@ -59,31 +59,31 @@ test("build and check produce light and dark --ft variables", async () => {
   const css = fs.readFileSync(cssPath, "utf8");
   assert.match(css, /:root, \[data-theme="light"\]/);
   assert.match(css, /\[data-theme="dark"\], \.dark/);
-  assert.match(css, /--ft-color-bg: oklch\(99% 0\.005 260\);/);
-  assert.match(css, /--ft-color-fg: oklch\(18% 0\.02 260\);/);
-  assert.match(css, /--ft-color-accent: oklch\(55% 0\.18 264\);/);
-  assert.match(css, /--ft-space-1: 4px;/);
-  assert.match(css, /--ft-space-4: 16px;/);
-  assert.match(css, /--ft-radius-md: 8px;/);
-  assert.match(css, /--ft-font-size-2: 14px;/);
-  assert.match(css, /--ft-line-height-normal: 1\.5;/);
-  assert.match(css, /--ft-font-family-sans: system-ui, -apple-system, "Segoe UI", sans-serif;/);
-  assert.match(css, /--ft-shadow-md: 0 4px 12px oklch\(18% 0\.02 260 \/ 0\.12\);/);
-  assert.match(css, /--ft-color-warning-fg: oklch\(46% 0\.12 85\);/);
-  assert.match(css, /--ft-color-focus-ring: oklch\(70% 0\.16 264\);/);
-  assert.doesNotMatch(css, /--ft-lineHeight-/);
+  assert.match(css, /--tesso-color-bg: oklch\(99% 0\.005 260\);/);
+  assert.match(css, /--tesso-color-fg: oklch\(18% 0\.02 260\);/);
+  assert.match(css, /--tesso-color-accent: oklch\(55% 0\.18 264\);/);
+  assert.match(css, /--tesso-space-1: 4px;/);
+  assert.match(css, /--tesso-space-4: 16px;/);
+  assert.match(css, /--tesso-radius-md: 8px;/);
+  assert.match(css, /--tesso-font-size-2: 14px;/);
+  assert.match(css, /--tesso-line-height-normal: 1\.5;/);
+  assert.match(css, /--tesso-font-family-sans: system-ui, -apple-system, "Segoe UI", sans-serif;/);
+  assert.match(css, /--tesso-shadow-md: 0 4px 12px oklch\(18% 0\.02 260 \/ 0\.12\);/);
+  assert.match(css, /--tesso-color-warning-fg: oklch\(46% 0\.12 85\);/);
+  assert.match(css, /--tesso-color-focus-ring: oklch\(70% 0\.16 264\);/);
+  assert.doesNotMatch(css, /--tesso-lineHeight-/);
 
   const dark = css.split('[data-theme="dark"], .dark')[1].split("@media")[0];
-  assert.match(dark, /--ft-color-bg: oklch\(18% 0\.02 260\);/);
-  assert.match(dark, /--ft-color-fg: oklch\(99% 0\.005 260\);/);
-  assert.match(dark, /--ft-color-accent: oklch\(70% 0\.16 264\);/);
-  assert.match(dark, /--ft-color-focus-ring: oklch\(92% 0\.04 264\);/);
-  assert.match(dark, /--ft-color-border: oklch\(36% 0\.018 260\);/);
-  assert.match(dark, /--ft-color-border-strong: oklch\(52% 0\.016 260\);/);
-  assert.match(dark, /--ft-color-warning-fg: oklch\(68% 0\.15 85\);/);
-  assert.match(dark, /--ft-shadow-md: 0 4px 12px oklch\(99% 0\.005 260 \/ 0\.10\);/);
-  assert.doesNotMatch(dark, /--ft-space-1/);
-  assert.doesNotMatch(dark, /--ft-font-/);
+  assert.match(dark, /--tesso-color-bg: oklch\(18% 0\.02 260\);/);
+  assert.match(dark, /--tesso-color-fg: oklch\(99% 0\.005 260\);/);
+  assert.match(dark, /--tesso-color-accent: oklch\(70% 0\.16 264\);/);
+  assert.match(dark, /--tesso-color-focus-ring: oklch\(92% 0\.04 264\);/);
+  assert.match(dark, /--tesso-color-border: oklch\(36% 0\.018 260\);/);
+  assert.match(dark, /--tesso-color-border-strong: oklch\(52% 0\.016 260\);/);
+  assert.match(dark, /--tesso-color-warning-fg: oklch\(68% 0\.15 85\);/);
+  assert.match(dark, /--tesso-shadow-md: 0 4px 12px oklch\(99% 0\.005 260 \/ 0\.10\);/);
+  assert.doesNotMatch(dark, /--tesso-space-1/);
+  assert.doesNotMatch(dark, /--tesso-font-/);
   assert.match(css, /@media \(prefers-color-scheme: dark\)/);
   assert.match(css, /:root:not\(\[data-theme="light"\]\)/);
 
@@ -122,7 +122,7 @@ test("style-dictionary engine is rejected", async () => {
   const cwd = fs.mkdtempSync(path.join(repo, ".tmp", "engine-"));
   fs.mkdirSync(cwd, { recursive: true });
   fs.writeFileSync(
-    path.join(cwd, "fusor-tokens.config.json"),
+    path.join(cwd, "tesso.config.json"),
     JSON.stringify({
       tokens: ["tokens/**/*.tokens.json"],
       outFile: "public/tokens.css",

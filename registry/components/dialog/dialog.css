@@ -1,0 +1,74 @@
+.tesso-dialog-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--tesso-space-4);
+}
+
+.tesso-dialog-root[hidden] {
+  display: none;
+}
+
+.tesso-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklch, var(--tesso-color-fg) 40%, transparent);
+}
+
+.tesso-dialog-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc(var(--tesso-space-12) * 10));
+  max-height: calc(100vh - var(--tesso-space-8));
+  overflow: auto;
+  padding: var(--tesso-space-6);
+  background: var(--tesso-color-bg-subtle);
+  color: var(--tesso-color-fg);
+  border: 1px solid var(--tesso-color-border);
+  border-radius: var(--tesso-radius-lg);
+  box-shadow: var(--tesso-shadow-lg);
+}
+
+.tesso-dialog-panel:focus {
+  outline: none;
+}
+
+.tesso-dialog-panel:focus-visible {
+  outline: 2px solid var(--tesso-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.tesso-dialog-title {
+  margin: 0;
+  padding-right: var(--tesso-space-12);
+  font-size: var(--tesso-font-size-4);
+  font-weight: var(--tesso-font-weight-semibold);
+  line-height: var(--tesso-line-height-tight);
+}
+
+.tesso-dialog-description {
+  margin: var(--tesso-space-2) 0 0;
+  color: var(--tesso-color-fg-muted);
+  font: var(--tesso-font-weight-regular) var(--tesso-font-size-2) / var(--tesso-line-height-normal)
+    var(--tesso-font-family-sans);
+}
+
+.tesso-dialog-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tesso-space-2);
+  margin-top: var(--tesso-space-4);
+}
+
+.tesso-dialog-close {
+  position: absolute;
+  top: var(--tesso-space-3);
+  right: var(--tesso-space-3);
+}
+
+html.tesso-dialog-open,
+html.tesso-dialog-open body {
+  overflow: hidden;
+}
