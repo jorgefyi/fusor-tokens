@@ -1,6 +1,6 @@
 {
   "name": "fusor-tokens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Turn DTCG design tokens into public/tokens.css and wire them into a Fusor app.",
   "license": "MIT",
   "author": "jorgefyi",

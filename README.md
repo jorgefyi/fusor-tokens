@@ -1,20 +1,26 @@
 # Fusor Tokens
 
-Fusor Tokens is a small CLI that turns [DTCG](https://www.designtokens.org/) design tokens into `public/tokens.css` and wires that file into a Fusor app’s `[package.metadata.fusor] assets-build`, so light and dark themes ship with `fusor build` and `fusor dev`.
+[![npm](https://img.shields.io/npm/v/fusor-tokens)](https://www.npmjs.com/package/fusor-tokens)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-The output is CSS variables prefixed `--ft-`. There is no component kit and no Tailwind theme.
+Fusor Tokens is a small CLI that turns [DTCG](https://www.designtokens.org/) design tokens into `public/tokens.css` and wires that file into a [Fusor](https://github.com/fusor-rs/fusor) app’s `[package.metadata.fusor] assets-build`, so light and dark themes ship with `fusor build` and `fusor dev`.
+
+The output is CSS variables prefixed `--ft-`. This package ships tokens only, with no components and no Tailwind theme.
+
+## Quick start
+
+```bash
+npm install --save-dev fusor-tokens @terrazzo/cli @terrazzo/plugin-css
+npx fusor-tokens init
+fusor dev
+```
+
+Then add `<link rel="stylesheet" href="/tokens.css" />` to your `<head>`.
 
 ## Install
 
 ```bash
 npm install --save-dev fusor-tokens @terrazzo/cli @terrazzo/plugin-css
-```
-
-In this repo the package is the project itself:
-
-```bash
-npm install
-node bin/fusor-tokens.js --help
 ```
 
 Node 20 or newer is required. Rust apps stay Node-free until they opt in with `init`.
@@ -36,16 +42,17 @@ npx fusor-tokens init
 - npm devDependencies for Terrazzo
 - `[package.metadata.fusor]` keys `assets = "public"` and `assets-build = ["npx", "fusor-tokens", "build"]` when they are missing
 
+> **Heads-up:** the `.gitignore` that `fusor new` creates includes `/.fusor-*/`, which also ignores `.fusor-tokens/`. Add `!/.fusor-tokens/` to your `.gitignore` so the Terrazzo config gets committed. This is tracked upstream in [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23).
+
 It does **not** call `fusor add`. Add the stylesheet in `<head>`:
 
 ```html
 <link rel="stylesheet" href="/tokens.css" />
 ```
 
-Edit a color, then rebuild:
+To change a color, edit it in `tokens/color.tokens.json` (for example `color.accent.9`), then rebuild:
 
 ```bash
-# tokens/color.tokens.json — color.accent.9
 npx fusor-tokens build
 ```
 
@@ -165,8 +172,24 @@ npm test
 npm run preview
 ```
 
-[Shift counter](http://127.0.0.1:44731) serves `examples/counter-themed` and toggles `data-theme` against the committed `public/tokens.css`.
+`npm run preview` serves [`examples/counter-themed`](examples/counter-themed) at `http://127.0.0.1:44731` (set `PORT` to change it). The page toggles `data-theme` against the committed `public/tokens.css`.
 
 ## Non-goals
 
-No shadcn- or Radix-style components, no Tailwind or UnoCSS export, no multi-brand themes, no Figma sync, no Rust token runtime, and no crates.io Fusor capability. Tokens are files plus a pre-asset script. The surface is intentionally small for Fusor pre-1.0.
+No components in this package (a shadcn-style kit built on these tokens is planned separately), no Tailwind or UnoCSS export, no multi-brand themes, no Figma sync, no Rust token runtime, and no crates.io Fusor capability. Tokens are files plus a pre-asset script. The surface is intentionally small for Fusor pre-1.0.
+
+## Contributing
+
+Issues and pull requests are welcome on [GitHub](https://github.com/jorgefyi/fusor-tokens/issues). To work on the CLI itself:
+
+```bash
+npm install
+node bin/fusor-tokens.js --help
+npm test
+```
+
+Fusor is pre-1.0, so some rough edges live upstream. Limits we've hit so far are filed on [fusor-rs/fusor](https://github.com/fusor-rs/fusor/issues?q=is%3Aissue+author%3Ajorgefyi) (#20 to #24).
+
+## License
+
+[MIT](LICENSE)

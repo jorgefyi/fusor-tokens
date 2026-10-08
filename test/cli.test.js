@@ -38,7 +38,7 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   assert.match(cargo, /assets-build = \["npx", "fusor-tokens", "build"\]/);
   const pkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
   assert.equal(pkg.devDependencies["@terrazzo/cli"], "^2.7.1");
-  assert.equal(pkg.devDependencies["fusor-tokens"], "^0.1.0");
+  assert.equal(pkg.devDependencies["fusor-tokens"], "^0.1.1");
 
   const again = capture();
   assert.equal(await run(["init", "--no-install", "--cwd", cwd], again), 0);

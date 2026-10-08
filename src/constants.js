@@ -31,7 +31,7 @@ export const TOKEN_TYPES = new Set([
 ]);
 
 export const TERRAZZO_VERSION = "^2.7.1";
-export const PACKAGE_VERSION = "0.1.0";
+export const PACKAGE_VERSION = "0.1.1";
 
 // Fusor's assets-build is one argv (program + args, no shell), not a list of
 // shell commands. See fusor-build AppConfig::assets_build.
