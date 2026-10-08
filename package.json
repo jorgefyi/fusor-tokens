@@ -6,11 +6,11 @@
   "author": "jorgefyi",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jorgefyi/fusor-tokens.git"
+    "url": "git+https://github.com/jorgefyi/tesso.git"
   },
-  "homepage": "https://github.com/jorgefyi/fusor-tokens#readme",
+  "homepage": "https://github.com/jorgefyi/tesso#readme",
   "bugs": {
-    "url": "https://github.com/jorgefyi/fusor-tokens/issues"
+    "url": "https://github.com/jorgefyi/tesso/issues"
   },
   "keywords": [
     "design-tokens",

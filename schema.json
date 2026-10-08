@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jorgefyi/fusor-tokens/raw/main/schema.json",
+  "$id": "https://github.com/jorgefyi/tesso/raw/main/schema.json",
   "title": "tesso config",
   "description": "Configuration for the tesso CLI. CSS variables for light and dark themes, plus an optional component registry URL.",
   "type": "object",

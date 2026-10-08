@@ -299,7 +299,7 @@ No Tailwind or UnoCSS export, no multi-brand themes, no Figma sync, no Rust toke
 
 ## Contributing
 
-Issues and pull requests are welcome on [GitHub](https://github.com/jorgefyi/fusor-tokens/issues). To work on the CLI itself:
+Issues and pull requests are welcome on [GitHub](https://github.com/jorgefyi/tesso/issues). To work on the CLI itself:
 
 ```bash
 npm install
