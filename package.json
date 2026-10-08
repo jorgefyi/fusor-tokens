@@ -4,6 +4,14 @@
   "description": "Turn DTCG design tokens into public/tokens.css and wire them into a Fusor app.",
   "license": "MIT",
   "author": "jorgefyi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jorgefyi/fusor-tokens.git"
+  },
+  "homepage": "https://github.com/jorgefyi/fusor-tokens#readme",
+  "bugs": {
+    "url": "https://github.com/jorgefyi/fusor-tokens/issues"
+  },
   "keywords": [
     "design-tokens",
     "dtcg",
