@@ -35,7 +35,7 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   assert.equal(fs.existsSync(path.join(cwd, ".fusor-tokens/terrazzo.config.ts")), true);
   const cargo = fs.readFileSync(path.join(cwd, "Cargo.toml"), "utf8");
   assert.match(cargo, /assets = "public"/);
-  assert.match(cargo, /npx fusor-tokens build/);
+  assert.match(cargo, /assets-build = \["npx", "fusor-tokens", "build"\]/);
   const pkg = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8"));
   assert.equal(pkg.devDependencies["@terrazzo/cli"], "^2.7.1");
   assert.equal(pkg.devDependencies["fusor-tokens"], "^0.1.0");
@@ -44,7 +44,7 @@ test("init scaffolds tokens, config, pipeline, and Cargo metadata", async () => 
   assert.equal(await run(["init", "--no-install", "--cwd", cwd], again), 0);
   assert.match(again.text(), /kept existing/);
   const cargoAgain = fs.readFileSync(path.join(cwd, "Cargo.toml"), "utf8");
-  assert.equal(cargoAgain.split("npx fusor-tokens build").length, 2);
+  assert.equal(cargoAgain.split("assets-build").length, 2);
 });
 
 test("build and check produce light and dark --ft variables", async () => {

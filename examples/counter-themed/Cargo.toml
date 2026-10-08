@@ -1,16 +1,34 @@
 [package]
 name = "counter-themed"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 publish = false
-description = "Fusor app sketch that consumes fusor-tokens CSS variables."
+description = "Fusor app that consumes fusor-tokens CSS variables."
 
-# Host `cargo check` compiles src/lib.rs only. src/theme.rs is the wasm toggle
-# sketch and is not a crate module until a Fusor app wires it up.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+fusor-core = { version = "=0.1.5", features = ["dom"] }
+fusor-components = { version = "=0.1.5", features = ["browser"] }
+wasm-bindgen = "=0.2.117"
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "DomTokenList", "Storage", "MediaQueryList"] }
+
+[build-dependencies]
+fusor-build = "=0.1.5"
 
 [package.metadata.fusor]
 entry = "web/index.html"
 assets = "public"
-assets-build = ["npx fusor-tokens build"]
+assets-build = ["npx", "fusor-tokens", "build"]
 output = "dist"
 base-path = "/"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"

@@ -6,7 +6,7 @@ test("appends fusor metadata when the section is missing", () => {
   const { text, notes } = patchCargoToml(`[package]\nname = "demo"\n`);
   assert.match(text, /\[package\.metadata\.fusor\]/);
   assert.match(text, /assets = "public"/);
-  assert.match(text, /assets-build = \["npx fusor-tokens build"\]/);
+  assert.match(text, /assets-build = \["npx", "fusor-tokens", "build"\]/);
   assert.ok(notes.some((note) => note.includes("package.metadata.fusor")));
 });
 
@@ -18,16 +18,28 @@ assets = "static"
   const { text } = patchCargoToml(source);
   assert.match(text, /assets = "static"/);
   assert.doesNotMatch(text, /assets = "public"/);
-  assert.match(text, /assets-build = \["npx fusor-tokens build"\]/);
+  assert.match(text, /assets-build = \["npx", "fusor-tokens", "build"\]/);
 });
 
-test("appends the build command to an existing assets-build array once", () => {
+test("leaves an existing assets-build command alone", () => {
   const source = `[package.metadata.fusor]
 assets = "public"
-assets-build = ["echo hi"]
+assets-build = ["node", "build.mjs"]
+`;
+  const { text, notes } = patchCargoToml(source);
+  assert.equal(text, source);
+  assert.ok(notes.some((note) => note.includes("kept existing assets-build")));
+});
+
+test("is idempotent and keeps keys inside the section", () => {
+  const source = `[package.metadata.fusor]
+assets = "public"
+output = "dist"
+
+[profile.release]
+opt-level = "s"
 `;
   const once = patchCargoToml(source).text;
-  assert.match(once, /assets-build = \["echo hi", "npx fusor-tokens build"\]/);
-  const twice = patchCargoToml(once).text;
-  assert.equal(twice, once);
+  assert.match(once, /output = "dist"\nassets-build = \["npx", "fusor-tokens", "build"\]\n\n\[profile\.release\]/);
+  assert.equal(patchCargoToml(once).text, once);
 });

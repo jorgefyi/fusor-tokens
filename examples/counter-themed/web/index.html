@@ -19,6 +19,22 @@
     <title>Shift counter</title>
   </head>
   <body>
-    <app></app>
+    <App state="{{ App::new() }}">
+      <section class="shell">
+        <article class="panel">
+          <header class="panel-head">
+            <p class="eyebrow">Fusor tokens</p>
+            <h1>Shift</h1>
+          </header>
+          <p class="count" aria-live="polite">{{ state.count.get() }}</p>
+          <div class="row">
+            <button type="button" class="btn btn-quiet" on:click="state.decrement()">Minus</button>
+            <button type="button" class="btn btn-primary" on:click="state.increment()">Plus</button>
+          </div>
+          <ThemeToggle></ThemeToggle>
+          <p class="warn-copy">Cutoff in 2 hours. This line uses color.warning.fg.</p>
+        </article>
+      </section>
+    </App>
   </body>
 </html>

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ASSETS_BUILD_COMMAND } from "./constants.js";
+import { ASSETS_BUILD_COMMAND, ASSETS_BUILD_TOML } from "./constants.js";
 
 const SECTION = "[package.metadata.fusor]";
 
@@ -15,7 +15,7 @@ export function patchCargoToml(source) {
       "",
       SECTION,
       'assets = "public"',
-      `assets-build = ["${ASSETS_BUILD_COMMAND}"]`,
+      ASSETS_BUILD_TOML,
       "",
     ].join("\n");
     const body = text.endsWith("\n") || text.length === 0 ? text : `${text}\n`;
@@ -35,26 +35,25 @@ export function patchCargoToml(source) {
   const section = lines.slice(header + 1, end);
   const notes = [];
 
+  // Insert before the section's trailing blank lines so new keys stay inside it visually.
+  let insertAt = section.length;
+  while (insertAt > 0 && section[insertAt - 1].trim() === "") insertAt--;
+  const add = (line) => section.splice(insertAt++, 0, line);
+
   if (!section.some((line) => /^\s*assets\s*=/.test(line))) {
-    section.push('assets = "public"');
+    add('assets = "public"');
     notes.push('set assets = "public"');
   }
 
   const buildIndex = section.findIndex((line) => /^\s*assets-build\s*=/.test(line));
   if (buildIndex === -1) {
-    section.push(`assets-build = ["${ASSETS_BUILD_COMMAND}"]`);
+    add(ASSETS_BUILD_TOML);
     notes.push("set assets-build");
-  } else {
-    const line = section[buildIndex];
-    if (!line.includes(ASSETS_BUILD_COMMAND)) {
-      if (!/^\s*assets-build\s*=\s*\[.*\]\s*$/.test(line)) {
-        throw new Error(
-          "Cargo.toml assets-build is not a single-line array. Add \"npx fusor-tokens build\" yourself.",
-        );
-      }
-      section[buildIndex] = line.replace(/\]\s*$/, `, "${ASSETS_BUILD_COMMAND}"]`);
-      notes.push("appended assets-build command");
-    }
+  } else if (section[buildIndex].replace(/\s+/g, "") !== ASSETS_BUILD_TOML.replace(/\s+/g, "")) {
+    // assets-build is a single program + args; appending would corrupt it.
+    notes.push(
+      `kept existing assets-build — Fusor runs one command, so call \`${ASSETS_BUILD_COMMAND}\` from that script yourself`,
+    );
   }
 
   const next = [...lines.slice(0, header + 1), ...section, ...lines.slice(end)];

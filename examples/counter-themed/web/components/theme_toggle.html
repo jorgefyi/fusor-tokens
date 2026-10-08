@@ -1,20 +1,22 @@
-<div class="theme" role="group" aria-label="Theme">
-  <button
-    type="button"
-    class="btn"
-    class:primary="theme == 'light'"
-    class:quiet="theme != 'light'"
-    on:click="set_light()"
-  >
-    Light
-  </button>
-  <button
-    type="button"
-    class="btn"
-    class:primary="theme == 'dark'"
-    class:quiet="theme != 'dark'"
-    on:click="set_dark()"
-  >
-    Dark
-  </button>
-</div>
+<template rust:component="ThemeToggle">
+  <div class="theme" role="group" aria-label="Theme">
+    <button
+      type="button"
+      class="btn"
+      class:primary='state.theme.get() == "light"'
+      class:quiet='state.theme.get() != "light"'
+      on:click="state.set_light()"
+    >
+      Light
+    </button>
+    <button
+      type="button"
+      class="btn"
+      class:primary='state.theme.get() == "dark"'
+      class:quiet='state.theme.get() != "dark"'
+      on:click="state.set_dark()"
+    >
+      Dark
+    </button>
+  </div>
+</template>

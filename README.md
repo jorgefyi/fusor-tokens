@@ -34,7 +34,7 @@ npx fusor-tokens init
 - `.fusor-tokens/terrazzo.config.ts` (committed; Terrazzo is the engine)
 - `public/`
 - npm devDependencies for Terrazzo
-- `[package.metadata.fusor]` keys `assets = "public"` and `assets-build = ["npx fusor-tokens build"]` when they are missing
+- `[package.metadata.fusor]` keys `assets = "public"` and `assets-build = ["npx", "fusor-tokens", "build"]` when they are missing
 
 It does **not** call `fusor add`. Add the stylesheet in `<head>`:
 
@@ -63,12 +63,12 @@ Commit `public/tokens.css` so a Fusor build without Node still has the last styl
 [package.metadata.fusor]
 entry = "web/index.html"
 assets = "public"
-assets-build = ["npx fusor-tokens build"]
+assets-build = ["npx", "fusor-tokens", "build"]
 output = "dist"
 base-path = "/"
 ```
 
-`assets-build` is the kebab-case form of fusor-build’s `assets_build` list. Each string runs as a shell program before Fusor copies `assets` into the build output.
+`assets-build` is the kebab-case form of fusor-build’s `assets_build`: one program and its arguments, run in the package without a shell before Fusor copies `assets` into the build output. Write each argument as its own string; `["npx fusor-tokens build"]` fails with `could not run npx fusor-tokens build: No such file or directory`.
 
 ```html
 <!doctype html>
@@ -91,12 +91,14 @@ base-path = "/"
     <title>My Fusor App</title>
   </head>
   <body>
-    <app></app>
+    <App state="{{ App::new() }}">
+      <!-- your markup and components -->
+    </App>
   </body>
 </html>
 ```
 
-Leave `data-theme` unset until the reader picks a theme. `tokens.css` then follows `prefers-color-scheme: dark` on `:root:not([data-theme="light"])`. An explicit `data-theme="light"` stays light even when the OS is dark. When a theme is stored, put it on `<html>` and keep `.dark` in sync. Use Fusor `class:name` for component state, not for the theme switch. See `examples/counter-themed` for the Cargo metadata, the HTML links, a FOUC script, and a Rust toggle sketch.
+Leave `data-theme` unset until the reader picks a theme. `tokens.css` then follows `prefers-color-scheme: dark` on `:root:not([data-theme="light"])`. An explicit `data-theme="light"` stays light even when the OS is dark. When a theme is stored, put it on `<html>` and keep `.dark` in sync. Use Fusor `class:name` for component state, not for the theme switch. See `examples/counter-themed` for the Cargo metadata, the HTML links, a FOUC script, and a Rust `ThemeToggle` component.
 
 `tokens/semantic.tokens.json` is the light theme. `tokens/themes/dark.tokens.json` overrides the semantic colors for dark. There is no second copy of the light file. Space, radius, and type stay on `:root`. Shadow offset and blur stay shared; the shadow color (`color.shadow.sm`, `md`, `lg`) changes per theme so the lift is still visible on a dark background.
 

@@ -1,5 +1,3 @@
-fn main() {
-    println!("cargo:rerun-if-changed=web");
-    println!("cargo:rerun-if-changed=public");
-    println!("cargo:rerun-if-changed=Cargo.toml");
+fn main() -> Result<(), fusor_build::BuildError> {
+    fusor_build::compile_app()
 }
