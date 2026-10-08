@@ -125,7 +125,7 @@ The parent module that owns the page template must import each component (`use c
 The component renders a native `<dialog>` and calls `showModal()` while `open` is true, and `close()` when it becomes false. The browser then:
 
 - traps focus inside the topmost dialog
-- closes only that dialog on Escape, so a dialog underneath stays open
+- closes only that dialog on Escape when one dialog opens another, so the dialog underneath stays open
 - makes the rest of the page inert
 - paints the dialog in the top layer, so a parent with `transform` or `overflow` cannot clip it or bury it
 
@@ -133,7 +133,9 @@ The element sets `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `a
 
 Focus returns to the control that opened the dialog. Safari and Firefox do not focus a button on click, and the browser would put focus back on `<body>`, so Dialog records the `pointerdown` target and uses it when the focused element is `<body>` or `<html>`.
 
-Fusor has no element ref. `dialog.rs` looks up `[data-tesso-dialog]` once when `open` becomes true. If that node is not mounted yet, it tries again on the next turn, not on a polling timer. Which dialog Escape closes, which element is the opener, and whether the page behind is inert live in `dialog_a11y.rs` and are covered by `cargo test`. `add dialog` adds the `web-sys` features this uses (`HtmlDialogElement`, `HtmlElement`, `Node`, and the listener types). fusor-core does not enable them.
+The browser gives each modal dialog its own close watcher when a user gesture opens it. A button inside one dialog opening the next is that gesture, so Escape closes only the top dialog. Two dialogs opened with no new gesture between them share a watcher group, and one Escape closes the group.
+
+Fusor has no element ref. `dialog.rs` looks up `[data-tesso-dialog]` once when `open` becomes true. If that node is not mounted yet, it tries again on the next turn, not on a polling timer. Which dialog is on top, which element is the opener, and whether the page behind is inert live in `dialog_a11y.rs` and are covered by `cargo test`. `add dialog` adds the `web-sys` features this uses (`HtmlDialogElement`, `HtmlElement`, `Node`, and the listener types). fusor-core does not enable them.
 
 ## Fusor wiring
 

@@ -64,9 +64,8 @@ test("dialog markup is a native modal wired to the tested decisions", () => {
   assert.match(rust, /dialog_a11y::choose_opener/);
   assert.match(rust, /dialog_a11y::should_restore_focus/);
   assert.match(rust, /dialog_a11y::allows_escape/);
-  assert.match(rust, /dialog_a11y::EscapeGate/);
   assert.match(rust, /\.background_inert\(\)/);
   assert.match(rust, /\.escape\(\)/);
-  assert.match(rust, /fn reopen_dialog/);
+  assert.doesNotMatch(rust, /reopen_dialog|EscapeGate/);
   assert.doesNotMatch(rust, /keydown/);
 });

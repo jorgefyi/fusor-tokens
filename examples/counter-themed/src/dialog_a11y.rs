@@ -79,42 +79,12 @@ pub fn should_restore_focus(choice: OpenerChoice, connected: bool, inside_dialog
     choice != OpenerChoice::None && connected && !inside_dialog
 }
 
-/// Escape applies only to the dialog at the top of the stack.
+/// Escape applies only to the dialog at the top of the stack. The browser does
+/// this when each dialog was opened from its own user gesture. Dialogs opened
+/// with no new gesture share a close-watcher group, and one Escape closes that
+/// whole group.
 pub fn allows_escape(is_top: bool) -> bool {
     is_top
-}
-
-/// One Escape can deliver `cancel` to every open dialog. The first top dialog
-/// claims it; later `cancel` events in that same key, even if a dialog becomes
-/// top because the first one already closed, do not.
-#[derive(Debug, Default)]
-pub struct EscapeGate {
-    chosen: Option<String>,
-}
-
-impl EscapeGate {
-    pub const fn new() -> Self {
-        Self { chosen: None }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.chosen.is_none()
-    }
-
-    pub fn claim(&mut self, id: &str, is_top: bool) -> bool {
-        if let Some(chosen) = &self.chosen {
-            return chosen == id;
-        }
-        if !is_top {
-            return false;
-        }
-        self.chosen = Some(id.to_string());
-        true
-    }
-
-    pub fn reset(&mut self) {
-        self.chosen = None;
-    }
 }
 
 #[cfg(test)]
@@ -214,26 +184,6 @@ mod tests {
         assert_eq!(choose_opener(None, None), OpenerChoice::None);
         assert!(!should_restore_focus(OpenerChoice::Active, true, true));
         assert!(!should_restore_focus(OpenerChoice::Active, false, false));
-    }
-
-    #[test]
-    fn one_escape_closes_only_the_dialog_that_was_top_when_it_started() {
-        let mut gate = EscapeGate::new();
-        assert!(gate.claim("details", true));
-        assert!(!gate.claim("reset", false));
-        // The top dialog may already have left the stack before the lower cancel.
-        assert!(!gate.claim("reset", true));
-        assert!(gate.claim("details", false));
-        gate.reset();
-        assert!(gate.claim("reset", true));
-    }
-
-    #[test]
-    fn a_lower_dialog_cannot_take_the_escape_from_the_top() {
-        let mut gate = EscapeGate::new();
-        assert!(!gate.claim("reset", false));
-        assert!(gate.claim("details", true));
-        assert!(!gate.claim("reset", false));
     }
 
     #[test]

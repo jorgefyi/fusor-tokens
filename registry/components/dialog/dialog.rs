@@ -3,8 +3,8 @@
 //! `open` is a `Signal<bool>` the page owns. While it is true this module calls
 //! `showModal()` on the native `<dialog>`; when it becomes false it calls
 //! `close()`. The browser traps focus, renders the dialog in the top layer, and
-//! makes the rest of the page inert. Escape fires `cancel` on the topmost dialog
-//! only.
+//! makes the rest of the page inert. When one dialog is opened from another,
+//! Escape fires `cancel` on the top dialog only.
 //!
 //! Fusor has no element ref, so the dialog node is found with
 //! `[data-tesso-dialog]` once when `open` becomes true. Safari and Firefox do
@@ -36,10 +36,6 @@ pub struct Dialog {
     instance_id: String,
     title_id: String,
     description_id: String,
-    /// Set when this dialog receives `cancel` but it was not the top dialog.
-    /// Some browsers close every modal on one Escape and the event is not
-    /// cancelable, so `close` puts the dialog back.
-    reject_close: Rc<Cell<bool>>,
     _effect: fusor::CleanupEffect,
 }
 
@@ -58,7 +54,6 @@ impl fusor::FromInputs for Dialog {
         let opener = Rc::new(RefCell::new(None));
         let choice = Rc::new(Cell::new(OpenerChoice::None));
         let generation = Rc::new(Cell::new(0u32));
-        let reject_close = Rc::new(Cell::new(false));
         let effect = fusor::effect_with_cleanup({
             let opener = Rc::clone(&opener);
             let choice = Rc::clone(&choice);
@@ -94,7 +89,6 @@ impl fusor::FromInputs for Dialog {
             instance_id,
             title_id,
             description_id,
-            reject_close,
             _effect: effect,
         })
     }
@@ -119,35 +113,20 @@ impl Dialog {
         }
     }
 
-    /// Escape fires `cancel` on the top dialog. Chrome also fires it, not
-    /// cancelable, on every modal under that one and then closes them all.
-    /// Claim the key for the dialog that was top, and mark the others so
-    /// `close` can put them back.
+    /// The browser fires `cancel` on the top dialog when that dialog was opened
+    /// from a user gesture, and the event can be canceled. `preventDefault`
+    /// stops the browser from restoring focus itself. The signal then closes
+    /// the dialog and returns focus to the opener.
+    ///
+    /// Dialogs created with no new user activation share a close-watcher group.
+    /// Escape then closes the whole group and `cancel` is not cancelable.
+    /// Reopening the lower dialogs would undo that, so this handler does not.
     fn on_cancel(&self, event: &web_sys::Event) {
         let _ = event.prevent_default();
-        if claim_escape(&self.instance_id) {
-            let open = self.open.clone();
-            defer(move || open.set(false));
-        } else {
-            self.reject_close.set(true);
-            let id = self.instance_id.clone();
-            // Queue the reopen before the top dialog queues its focus restore,
-            // so showModal() cannot steal the opener.
-            defer(move || reopen_dialog(&id));
-            let flag = Rc::clone(&self.reject_close);
-            let id = self.instance_id.clone();
-            defer(move || {
-                if dialog_is_open(&id) {
-                    flag.set(false);
-                }
-            });
-        }
+        self.close();
     }
 
     fn on_native_close(&self) {
-        if self.reject_close.replace(false) {
-            return;
-        }
         self.close();
     }
 }
@@ -255,29 +234,6 @@ fn dialog_is_open(id: &str) -> bool {
     find_dialog(id).is_some_and(|dialog| dialog.open())
 }
 
-fn reopen_dialog(id: &str) {
-    let Some(dialog) = find_dialog(id) else {
-        return;
-    };
-    if dialog.open() {
-        return;
-    }
-    let previous = active_element().filter(|element| {
-        let node: &web_sys::Node = element.unchecked_ref();
-        let root: &web_sys::Node = dialog.unchecked_ref();
-        root.contains(Some(node))
-    });
-    if dialog.show_modal().is_err() {
-        return;
-    }
-    if let Some(element) = previous
-        .as_ref()
-        .and_then(|element| element.dyn_ref::<web_sys::HtmlElement>())
-    {
-        let _ = element.focus();
-    }
-}
-
 fn next_instance_id() -> String {
     thread_local! {
         static NEXT: Cell<u32> = const { Cell::new(1) };
@@ -291,25 +247,10 @@ fn next_instance_id() -> String {
 
 thread_local! {
     static STACK: RefCell<dialog_a11y::ModalStack> = const { RefCell::new(dialog_a11y::ModalStack::new()) };
-    static ESCAPE_GATE: RefCell<dialog_a11y::EscapeGate> = const { RefCell::new(dialog_a11y::EscapeGate::new()) };
 }
 
 fn with_stack<T>(apply: impl FnOnce(&mut dialog_a11y::ModalStack) -> T) -> T {
     STACK.with(|stack| apply(&mut stack.borrow_mut()))
-}
-
-/// `thread_local!` inside `with_stack` would be a different stack for every
-/// return type, so opening and reading the top would not see the same dialogs.
-fn claim_escape(id: &str) -> bool {
-    let is_top = with_stack(|stack| dialog_a11y::allows_escape(stack.is_top(id)));
-    ESCAPE_GATE.with(|gate| {
-        let first = gate.borrow().is_empty();
-        let allowed = gate.borrow_mut().claim(id, is_top);
-        if first && allowed {
-            defer(|| ESCAPE_GATE.with(|gate| gate.borrow_mut().reset()));
-        }
-        allowed
-    })
 }
 
 fn sync_scroll_lock() {
