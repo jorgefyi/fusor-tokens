@@ -278,6 +278,7 @@ Fusor is pre-1.0. Limits this package works around:
 - [fusor-rs/fusor#22](https://github.com/fusor-rs/fusor/issues/22) — a Rust char literal such as `'dark'` inside a template is reported as invalid Rust tokens. Use a double-quoted string inside a single-quoted HTML attribute.
 - [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23) — `fusor new` ignores `/.fusor-*/`. Tesso uses `.tesso/` so the pipeline config is not ignored.
 - [fusor-rs/fusor#24](https://github.com/fusor-rs/fusor/issues/24) — `fusor add` cannot copy component source, so `tesso add` does it.
+- `fusor build` does not download its tools. On a fresh machine it exits with `wasm-bindgen 0.2.117 is not available` until you run `fusor install` (or `fusor dev`, which prepares them).
 - Component tags cannot take `on:click`. Pass a callback input, or put the listener on a native element inside the component.
 - A component template has one native HTML root. Dialog's backdrop and panel share a wrapper.
 - There is no element ref. Dialog finds its panel with `[data-tesso-dialog]`.

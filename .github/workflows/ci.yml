@@ -38,4 +38,5 @@ jobs:
         run: |
           npm install
           export PATH="$HOME/.fusor/bin:$PATH"
+          fusor install
           fusor build
