@@ -314,14 +314,13 @@ Fusor is pre-1.0. Limits this package works around:
 - [fusor-rs/fusor#22](https://github.com/fusor-rs/fusor/issues/22) — a Rust char literal such as `'dark'` inside a template is reported as invalid Rust tokens. Use a double-quoted string inside a single-quoted HTML attribute.
 - [fusor-rs/fusor#23](https://github.com/fusor-rs/fusor/issues/23) — `fusor new` ignores `/.fusor-*/`. Tesso uses `.tesso/` so the pipeline config is not ignored.
 - [fusor-rs/fusor#24](https://github.com/fusor-rs/fusor/issues/24) — `fusor add` cannot copy component source, so `tesso add` does it.
-- `fusor build` does not download its tools. On a fresh machine it exits with `wasm-bindgen 0.2.117 is not available` until you run `fusor install` (or `fusor dev`, which prepares them).
-- Component tags cannot take `on:click`. Pass a callback input, or put the listener on a native element inside the component.
-- A component template has one native HTML root. Dialog's root is the `<dialog>` element. The dimmed page is `::backdrop`, not a second element.
-- There is no element ref. Dialog finds its `<dialog>` with `[data-tesso-dialog]` once when it opens.
-- fusor-core does not enable the `web-sys` features Dialog uses (`HtmlDialogElement`, `HtmlElement`, `Node`, `EventTarget`, and the rest of the listener surface). `add dialog` adds them to the app's `Cargo.toml`.
+- [fusor-rs/fusor#25](https://github.com/fusor-rs/fusor/issues/25) says component tags cannot take `on:click`. Pass a callback input, or put the listener on a native element inside the component.
+- [fusor-rs/fusor#26](https://github.com/fusor-rs/fusor/issues/26) says a component template has one native HTML root. Dialog's root is the `<dialog>` element, and the dimmed page is `::backdrop`, not a second element.
+- [fusor-rs/fusor#27](https://github.com/fusor-rs/fusor/issues/27) says there is no element ref. Dialog finds its `<dialog>` with `[data-tesso-dialog]` once when it opens. The same issue covers `web-sys`: fusor-core doesn't enable `HtmlDialogElement`, `HtmlElement`, `Node` or `EventTarget`, so `add dialog` adds them.
+- [fusor-rs/fusor#28](https://github.com/fusor-rs/fusor/issues/28) says `<Children>` appears once per component.
+- [fusor-rs/fusor#29](https://github.com/fusor-rs/fusor/issues/29) says `fusor build` doesn't download its tools. On a fresh machine it exits until you run `fusor install`.
 - An author `display` rule on `dialog` overrides the user-agent rule `dialog:not([open]) { display: none }`. Dialog sets `display` only on `.tesso-dialog[open]`.
 - A literal component attribute is `&str`, not `String`.
-- `<Children>` appears once per component. The caller's template compiles that slot, so Dialog does not import Button when the page passes buttons as children.
 
 ## License
 
