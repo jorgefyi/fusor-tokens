@@ -243,9 +243,42 @@ Style Dictionary is a possible later engine (`usesDtcg`, two selectors or a cust
 
 ## Migrating from fusor-tokens
 
-Install `tesso-ui`, then run `npx tesso-ui init`. When it finds `.fusor-tokens/` or `fusor-tokens.config.json`, it asks before moving that folder to `.tesso/` and renaming `--ft-` variables to `--tesso-`. In CI, run `npx tesso-ui init --migrate` so the move happens without a prompt. `build` and `check` do not migrate; they error and point at `--migrate`.
+Tesso is the new name for fusor-tokens. Your tokens and themes carry over as they are. What changes is the package name, the config file and folder, and the CSS prefix, and one command handles all of it.
 
-A custom prefix is kept, and `--ft-` is left alone in that case. Token JSON is not rewritten. The community manager will expand this section.
+**1. Run the migration from your app root.**
+
+```bash
+npx tesso-ui init
+```
+
+When it finds `.fusor-tokens/` or `fusor-tokens.config.json`, it asks before moving anything. In CI or any terminal without a prompt, use `npx tesso-ui init --migrate` instead.
+
+**2. Install the new package.** `init` already swapped `fusor-tokens` for `tesso-ui` in your `package.json`, so this just fetches it.
+
+```bash
+npm install
+```
+
+**3. Check that everything moved.**
+
+| fusor-tokens | Tesso |
+| --- | --- |
+| package `fusor-tokens` | package `tesso-ui` |
+| command `fusor-tokens` | command `tesso` |
+| `fusor-tokens.config.json` | `tesso.config.json` |
+| `.fusor-tokens/` | `.tesso/` |
+| `--ft-color-bg` and friends | `--tesso-color-bg` and friends |
+| `assets-build = ["npx", "fusor-tokens", "build"]` | `assets-build = ["npx", "tesso-ui", "build"]` |
+
+**Good to know**
+
+- `--ft-` is rewritten in `.css`, `.html`, `.rs`, `.js`, `.mjs` and `.md` files, except under `node_modules`, `target`, `dist`, `.git`, `.tmp`, `tokens/`, and hidden directories other than `.tesso`. If you use the variables anywhere else, such as `.ts` or `.scss`, search for leftovers with `grep -rn -- "--ft-" . --exclude-dir=node_modules`.
+- `assets-build` is updated when it is `["npx", "fusor-tokens", "build"]` or `["npx","fusor-tokens","build"]`. Any other value is left in place, and `init` prints a note so you can point it at `tesso-ui` yourself.
+- If you set your own `prefix` in the config, Tesso keeps that prefix and does not rewrite `--ft-`. The folder, config file, package name, and default `assets-build` still move.
+- Token JSON files are never touched.
+- `tesso build` and `tesso check` won't run while the old folder or config is still there. They stop and tell you to run `tesso init --migrate`.
+- If you added `!/.fusor-tokens/` to your `.gitignore`, you can delete that line. `.tesso/` isn't caught by Fusor's default ignore rule.
+- `fusor-tokens` 0.1.x keeps working, but it won't get updates.
 
 ## Try the example
 
