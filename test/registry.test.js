@@ -45,18 +45,28 @@ test("registry tokens exist in the starter set", () => {
   }
 });
 
-test("dialog markup and focus trap are wired to the tested decisions", () => {
+test("dialog markup is a native modal wired to the tested decisions", () => {
   const html = fs.readFileSync(path.join(repo, "registry/components/dialog/dialog.html"), "utf8");
+  assert.match(html, /<dialog/);
   assert.match(html, /role="dialog"/);
   assert.match(html, /aria-modal="true"/);
   assert.match(html, /aria-labelledby="\{\{ state\.title_id\.as_str\(\) \}\}"/);
   assert.match(html, /aria-describedby="\{\{ state\.description_id\.as_str\(\) \}\}"/);
-  assert.match(html, /class="tesso-dialog-backdrop"/);
-  assert.match(html, /on:click="state\.close\(\)"/);
+  assert.match(html, /on:click="state\.on_backdrop_click\(&event\)"/);
+  assert.match(html, /on:cancel="state\.on_cancel\(&event\)"/);
+  assert.match(html, /on:close="state\.on_native_close\(\)"/);
+  const css = fs.readFileSync(path.join(repo, "registry/components/dialog/dialog.css"), "utf8");
+  assert.match(css, /\.tesso-dialog::backdrop/);
+  assert.match(css, /var\(--tesso-color-fg\)/);
+  assert.doesNotMatch(css, /\.tesso-dialog\s*\{[^}]*display\s*:/);
   const rust = fs.readFileSync(path.join(repo, "registry/components/dialog/dialog.rs"), "utf8");
-  assert.match(rust, /dialog_a11y::initial_focus/);
-  assert.match(rust, /dialog_a11y::focus_on_tab/);
-  assert.match(rust, /dialog_a11y::is_escape/);
+  assert.match(rust, /\.show_modal\(\)/);
+  assert.match(rust, /dialog_a11y::choose_opener/);
   assert.match(rust, /dialog_a11y::should_restore_focus/);
-  assert.match(rust, /add_event_listener_with_callback_and_bool\(\s*"keydown"/);
+  assert.match(rust, /dialog_a11y::allows_escape/);
+  assert.match(rust, /dialog_a11y::EscapeGate/);
+  assert.match(rust, /\.background_inert\(\)/);
+  assert.match(rust, /\.escape\(\)/);
+  assert.match(rust, /fn reopen_dialog/);
+  assert.doesNotMatch(rust, /keydown/);
 });

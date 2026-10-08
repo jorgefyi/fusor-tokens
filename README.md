@@ -120,19 +120,20 @@ The parent module that owns the page template must import each component (`use c
 </Dialog>
 ```
 
-`open` is a `Signal<bool>` the page owns. Closing the dialog sets it to false. `title` and `description` are static strings.
+`open` is a `Signal<bool>` the page owns. Closing the dialog, including Escape and a backdrop click, sets it back to false. `title` and `description` are static strings.
 
-While `open` is true the dialog:
+The component renders a native `<dialog>` and calls `showModal()` while `open` is true, and `close()` when it becomes false. The browser then:
 
-- sets `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby` on the panel
-- moves focus to the first tabbable control, or to the panel when there is none
-- keeps Tab and Shift+Tab inside the panel
-- closes on Escape
-- returns focus to the element that opened it
+- traps focus inside the topmost dialog
+- closes only that dialog on Escape, so a dialog underneath stays open
+- makes the rest of the page inert
+- paints the dialog in the top layer, so a parent with `transform` or `overflow` cannot clip it or bury it
 
-A backdrop click and the Close button also set `open` to false. The page owns the signal, so those paths and Escape all go through the same value.
+The element sets `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, and `aria-describedby`. `::backdrop` uses `--tesso-color-fg`. A click on the dialog outside the panel sets `open` to false, and so does the Close button.
 
-Fusor has no focus helper and no element ref. `dialog.rs` queries `[data-tesso-dialog]` after the DOM updates. The trap decisions (tab order, initial focus, Escape, whether to restore focus) live in `dialog_a11y.rs` and are covered by `cargo test`. `add dialog` also adds the `web-sys` features that trap uses (`KeyboardEvent`, `HtmlElement`, `Node`, and the listener types). fusor-core does not enable them.
+Focus returns to the control that opened the dialog. Safari and Firefox do not focus a button on click, and the browser would put focus back on `<body>`, so Dialog records the `pointerdown` target and uses it when the focused element is `<body>` or `<html>`.
+
+Fusor has no element ref. `dialog.rs` looks up `[data-tesso-dialog]` once when `open` becomes true. If that node is not mounted yet, it tries again on the next turn, not on a polling timer. Which dialog Escape closes, which element is the opener, and whether the page behind is inert live in `dialog_a11y.rs` and are covered by `cargo test`. `add dialog` adds the `web-sys` features this uses (`HtmlDialogElement`, `HtmlElement`, `Node`, and the listener types). fusor-core does not enable them.
 
 ## Fusor wiring
 
@@ -214,7 +215,7 @@ An optional `registry` key is an `http` or `https` URL. `add` and `list` reject 
 
 ## Registry
 
-Each item names its files, the path they are copied to, CSS appended to `public/tesso.css`, Rust modules, component dependencies, and the DTCG ids the CSS needs. `dialog` depends on `button` and asks for the `web-sys` features its focus trap uses. A later release can fetch this document from a URL without changing the item shape.
+Each item names its files, the path they are copied to, CSS appended to `public/tesso.css`, Rust modules, component dependencies, and the DTCG ids the CSS needs. `dialog` depends on `button` and asks for the `web-sys` features `showModal()` uses, including `HtmlDialogElement`. A later release can fetch this document from a URL without changing the item shape.
 
 ## Engine
 
@@ -313,10 +314,10 @@ Fusor is pre-1.0. Limits this package works around:
 - [fusor-rs/fusor#24](https://github.com/fusor-rs/fusor/issues/24) — `fusor add` cannot copy component source, so `tesso add` does it.
 - `fusor build` does not download its tools. On a fresh machine it exits with `wasm-bindgen 0.2.117 is not available` until you run `fusor install` (or `fusor dev`, which prepares them).
 - Component tags cannot take `on:click`. Pass a callback input, or put the listener on a native element inside the component.
-- A component template has one native HTML root. Dialog's backdrop and panel share a wrapper.
-- There is no element ref. Dialog finds its panel with `[data-tesso-dialog]`.
-- fusor-core does not enable the `web-sys` features Dialog uses (`KeyboardEvent`, `HtmlElement`, `Node`, `EventTarget`, and the rest of the listener surface). `add dialog` adds them to the app's `Cargo.toml`.
-- An author `display` rule overrides the user-agent `[hidden]` rule. Dialog restates `display: none` on `.tesso-dialog-root[hidden]`.
+- A component template has one native HTML root. Dialog's root is the `<dialog>` element. The dimmed page is `::backdrop`, not a second element.
+- There is no element ref. Dialog finds its `<dialog>` with `[data-tesso-dialog]` once when it opens.
+- fusor-core does not enable the `web-sys` features Dialog uses (`HtmlDialogElement`, `HtmlElement`, `Node`, `EventTarget`, and the rest of the listener surface). `add dialog` adds them to the app's `Cargo.toml`.
+- An author `display` rule on `dialog` overrides the user-agent rule `dialog:not([open]) { display: none }`. Dialog sets `display` only on `.tesso-dialog[open]`.
 - A literal component attribute is `&str`, not `String`.
 - `<Children>` appears once per component. The caller's template compiles that slot, so Dialog does not import Button when the page passes buttons as children.
 

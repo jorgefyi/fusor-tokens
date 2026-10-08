@@ -19,7 +19,7 @@ Tesso copies accessible Fusor components and keeps the 0.1 token pipeline. The n
 
 - `tesso add <component...>` copies Button, Card, and Dialog into the app. `--overwrite` replaces existing files. Without it, an existing file is refused and that component is not written.
 - `tesso list` prints the built-in registry.
-- Dialog traps focus while open, closes on Escape, returns focus to the opener, and sets `role="dialog"`, `aria-modal`, `aria-labelledby`, and `aria-describedby`.
+- Dialog uses a native `<dialog>` and `showModal()`. Escape closes only the top dialog, the page behind is inert, the dialog renders in the top layer, and focus returns to the opener even when that control never took focus. It sets `role="dialog"`, `aria-modal`, `aria-labelledby`, and `aria-describedby`.
 - `tesso.config.json` may set `registry` to an http(s) URL. Fetching that URL is not implemented yet; the error names the built-in document, which has the same shape.
 
 ## 0.1.1

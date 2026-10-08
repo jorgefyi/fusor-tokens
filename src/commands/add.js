@@ -167,7 +167,7 @@ function ensureCargoFeatures(cwd, item) {
   const features = item.cargo?.webSysFeatures ?? [];
   if (features.length === 0) return [];
   const file = path.join(cwd, "Cargo.toml");
-  if (!fs.existsSync(file)) return ["no Cargo.toml — add web-sys with the KeyboardEvent feature for Dialog"];
+  if (!fs.existsSync(file)) return ["no Cargo.toml — add web-sys with the HtmlDialogElement feature for Dialog"];
   const source = fs.readFileSync(file, "utf8");
   const next = ensureWebSysFeatures(source, features);
   if (next === source) return [];

@@ -21,7 +21,7 @@ The page components were copied with `tesso add button card dialog`:
 - `web/components/card.html` and `src/card.rs`
 - `web/components/dialog.html`, `src/dialog.rs`, and `src/dialog_a11y.rs`
 
-`src/app.rs` imports `Button`, `Card`, and `Dialog`. Reset opens the dialog. Cancel, the close button, the backdrop, and Escape set `reset_open` to false. Confirm sets the count to zero and closes. Dialog traps Tab and returns focus to Reset.
+`src/app.rs` imports `Button`, `Card`, and `Dialog`. Reset opens a dialog. Why, inside that dialog, opens a second one on top. Escape closes only the top dialog. Cancel, the close button, a click outside the panel, and Escape set that dialog's signal to false. Confirm sets the count to zero and closes. Focus returns to the control that opened the dialog.
 
 ## Commands
 

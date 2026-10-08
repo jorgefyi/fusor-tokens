@@ -76,14 +76,13 @@
     {
       "name": "dialog",
       "title": "Dialog",
-      "description": "Modal dialog with a backdrop, focus trap, Escape to close, and focus restored to the opener.",
+      "description": "Native modal dialog. Top layer, inert page, Escape closes the top dialog, and focus returns to the opener.",
       "dependencies": ["button"],
       "tokens": [
         "color.bg.subtle",
         "color.fg",
         "color.fg.muted",
         "color.border",
-        "color.focus.ring",
         "space.2",
         "space.3",
         "space.4",
@@ -117,10 +116,9 @@
           "Element",
           "HtmlElement",
           "Node",
-          "NodeList",
           "Event",
           "EventTarget",
-          "KeyboardEvent",
+          "HtmlDialogElement",
           "DomTokenList"
         ]
       }

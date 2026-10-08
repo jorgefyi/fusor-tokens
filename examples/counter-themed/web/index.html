@@ -46,6 +46,14 @@
         >
           <Button variant="quiet" size="md" on_press="{{ state.cancel_reset.clone() }}">Cancel</Button>
           <Button variant="danger" size="md" on_press="{{ state.confirm_reset.clone() }}">Reset count</Button>
+          <Button variant="secondary" size="md" on_press="{{ state.ask_details.clone() }}">Why?</Button>
+        </Dialog>
+        <Dialog
+          open="{{ state.details_open.clone() }}"
+          title="Reset is local"
+          description="This only clears the count in this tab. The rest of the page stays as it is."
+        >
+          <Button variant="primary" size="md" on_press="{{ state.close_details.clone() }}">OK</Button>
         </Dialog>
       </section>
     </App>

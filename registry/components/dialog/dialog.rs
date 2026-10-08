@@ -1,12 +1,18 @@
 //! Dialog copied by `tesso add dialog`.
 //!
-//! Fusor has no focus or dialog helper. While `open` is true this module traps
-//! Tab inside the panel, closes on Escape, and returns focus to the element
-//! that opened it. The decisions live in `dialog_a11y` so they can be tested
-//! without a browser; this file applies them to the DOM.
+//! `open` is a `Signal<bool>` the page owns. While it is true this module calls
+//! `showModal()` on the native `<dialog>`; when it becomes false it calls
+//! `close()`. The browser traps focus, renders the dialog in the top layer, and
+//! makes the rest of the page inert. Escape fires `cancel` on the topmost dialog
+//! only.
 //!
-//! `open` is a `Signal<bool>` the page owns. `title` and `description` are
-//! static strings and are the accessible name and description.
+//! Fusor has no element ref, so the dialog node is found with
+//! `[data-tesso-dialog]` once when `open` becomes true. Safari and Firefox do
+//! not focus a button on click, and the browser would restore `<body>` on close,
+//! so the last `pointerdown` target is kept as an opener fallback.
+//!
+//! Stacking, opener choice, and the inert-background decision live in
+//! `dialog_a11y` and are covered by `cargo test`.
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -15,7 +21,7 @@ use fusor::prelude::*;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::dialog_a11y::{self, FocusTarget, Focusable};
+use crate::dialog_a11y::{self, OpenerChoice, OpenerFacts};
 
 pub struct DialogInputs {
     pub open: Signal<bool>,
@@ -30,6 +36,10 @@ pub struct Dialog {
     instance_id: String,
     title_id: String,
     description_id: String,
+    /// Set when this dialog receives `cancel` but it was not the top dialog.
+    /// Some browsers close every modal on one Escape and the event is not
+    /// cancelable, so `close` puts the dialog back.
+    reject_close: Rc<Cell<bool>>,
     _effect: fusor::CleanupEffect,
 }
 
@@ -38,6 +48,7 @@ impl fusor::FromInputs for Dialog {
     type Error = std::convert::Infallible;
 
     fn from_inputs(inputs: Self::Inputs, _owner: OwnerHandle) -> Result<Self, Self::Error> {
+        install_pointer_tracker();
         let instance_id = next_instance_id();
         let title_id = format!("{instance_id}-title");
         let description_id = format!("{instance_id}-description");
@@ -45,23 +56,36 @@ impl fusor::FromInputs for Dialog {
         let watched = open.clone();
         let id_for_effect = instance_id.clone();
         let opener = Rc::new(RefCell::new(None));
+        let choice = Rc::new(Cell::new(OpenerChoice::None));
         let generation = Rc::new(Cell::new(0u32));
-        let opener_for_effect = Rc::clone(&opener);
-        let generation_for_effect = Rc::clone(&generation);
-        let effect = fusor::effect_with_cleanup(move || {
-            if !watched.get() {
-                restore_focus(&opener_for_effect);
-                return None;
+        let reject_close = Rc::new(Cell::new(false));
+        let effect = fusor::effect_with_cleanup({
+            let opener = Rc::clone(&opener);
+            let choice = Rc::clone(&choice);
+            let generation = Rc::clone(&generation);
+            move || {
+                let token = generation.get().wrapping_add(1);
+                generation.set(token);
+                let opened = Rc::new(Cell::new(false));
+                reconcile(Reconcile {
+                    id: id_for_effect.clone(),
+                    want_open: watched.get(),
+                    generation: Rc::clone(&generation),
+                    token,
+                    opener: Rc::clone(&opener),
+                    choice: Rc::clone(&choice),
+                    opened: Rc::clone(&opened),
+                    deferred: false,
+                });
+                Session {
+                    id: id_for_effect.clone(),
+                    generation: Rc::clone(&generation),
+                    token,
+                    opener: Rc::clone(&opener),
+                    choice: Rc::clone(&choice),
+                    opened,
+                }
             }
-            remember_opener(&id_for_effect, &opener_for_effect);
-            let token = generation_for_effect.get().wrapping_add(1);
-            generation_for_effect.set(token);
-            Some(Session::arm(
-                id_for_effect.clone(),
-                watched.clone(),
-                Rc::clone(&generation_for_effect),
-                token,
-            ))
         });
         Ok(Self {
             open,
@@ -70,6 +94,7 @@ impl fusor::FromInputs for Dialog {
             instance_id,
             title_id,
             description_id,
+            reject_close,
             _effect: effect,
         })
     }
@@ -79,9 +104,179 @@ impl Dialog {
     fn close(&self) {
         self.open.set(false);
     }
+
+    /// A click on the dialog box, outside the panel, is the backdrop.
+    /// `::backdrop` itself is not a click target.
+    fn on_backdrop_click(&self, event: &web_sys::Event) {
+        let Some(dialog) = find_dialog(&self.instance_id) else {
+            return;
+        };
+        let Some(target) = event_element(event) else {
+            return;
+        };
+        if same_element(&target, &dialog) {
+            self.close();
+        }
+    }
+
+    /// Escape fires `cancel` on the top dialog. Chrome also fires it, not
+    /// cancelable, on every modal under that one and then closes them all.
+    /// Claim the key for the dialog that was top, and mark the others so
+    /// `close` can put them back.
+    fn on_cancel(&self, event: &web_sys::Event) {
+        let _ = event.prevent_default();
+        if claim_escape(&self.instance_id) {
+            let open = self.open.clone();
+            defer(move || open.set(false));
+        } else {
+            self.reject_close.set(true);
+            let id = self.instance_id.clone();
+            // Queue the reopen before the top dialog queues its focus restore,
+            // so showModal() cannot steal the opener.
+            defer(move || reopen_dialog(&id));
+            let flag = Rc::clone(&self.reject_close);
+            let id = self.instance_id.clone();
+            defer(move || {
+                if dialog_is_open(&id) {
+                    flag.set(false);
+                }
+            });
+        }
+    }
+
+    fn on_native_close(&self) {
+        if self.reject_close.replace(false) {
+            return;
+        }
+        self.close();
+    }
 }
 
 fusor::template!("web/components/dialog.html");
+
+struct Session {
+    id: String,
+    generation: Rc<Cell<u32>>,
+    token: u32,
+    opener: Rc<RefCell<Option<web_sys::Element>>>,
+    choice: Rc<Cell<OpenerChoice>>,
+    opened: Rc<Cell<bool>>,
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        if self.generation.get() == self.token {
+            self.generation.set(self.token.wrapping_add(1));
+        }
+        if self.opened.replace(false) {
+            dismiss(&self.id, &self.opener, &self.choice);
+        }
+    }
+}
+
+struct Reconcile {
+    id: String,
+    want_open: bool,
+    generation: Rc<Cell<u32>>,
+    token: u32,
+    opener: Rc<RefCell<Option<web_sys::Element>>>,
+    choice: Rc<Cell<OpenerChoice>>,
+    opened: Rc<Cell<bool>>,
+    deferred: bool,
+}
+
+fn reconcile(task: Reconcile) {
+    if task.generation.get() != task.token {
+        return;
+    }
+    if !task.want_open {
+        if task.opened.get() || dialog_is_open(&task.id) {
+            dismiss(&task.id, &task.opener, &task.choice);
+            task.opened.set(false);
+        }
+        return;
+    }
+    let Some(dialog) = find_dialog(&task.id) else {
+        if !task.deferred {
+            defer_reconcile(task);
+        }
+        return;
+    };
+    if dialog.open() {
+        return;
+    }
+    remember_opener(&task.id, &task.opener, &task.choice);
+    if dialog.show_modal().is_err() {
+        if !task.deferred {
+            defer_reconcile(task);
+        }
+        return;
+    }
+    task.opened.set(true);
+    let id = task.id.clone();
+    with_stack(|stack| stack.open(id));
+    sync_scroll_lock();
+}
+
+fn defer_reconcile(task: Reconcile) {
+    defer(move || {
+        reconcile(Reconcile {
+            deferred: true,
+            ..task
+        });
+    });
+}
+
+fn dismiss(id: &str, opener: &RefCell<Option<web_sys::Element>>, choice: &Cell<OpenerChoice>) {
+    if let Some(dialog) = find_dialog(id) {
+        if dialog.open() {
+            dialog.close();
+        }
+    }
+    pop_dialog(id);
+    restore_focus(id, opener, choice);
+    sync_scroll_lock();
+}
+
+fn pop_dialog(id: &str) {
+    with_stack(|stack| {
+        if !stack.is_open(id) {
+            return;
+        }
+        if dialog_a11y::allows_escape(stack.is_top(id)) {
+            let _ = stack.escape();
+        } else {
+            stack.close(id);
+        }
+    });
+}
+
+fn dialog_is_open(id: &str) -> bool {
+    find_dialog(id).is_some_and(|dialog| dialog.open())
+}
+
+fn reopen_dialog(id: &str) {
+    let Some(dialog) = find_dialog(id) else {
+        return;
+    };
+    if dialog.open() {
+        return;
+    }
+    let previous = active_element().filter(|element| {
+        let node: &web_sys::Node = element.unchecked_ref();
+        let root: &web_sys::Node = dialog.unchecked_ref();
+        root.contains(Some(node))
+    });
+    if dialog.show_modal().is_err() {
+        return;
+    }
+    if let Some(element) = previous
+        .as_ref()
+        .and_then(|element| element.dyn_ref::<web_sys::HtmlElement>())
+    {
+        let _ = element.focus();
+    }
+}
 
 fn next_instance_id() -> String {
     thread_local! {
@@ -94,263 +289,184 @@ fn next_instance_id() -> String {
     })
 }
 
-struct Session {
-    generation: Rc<Cell<u32>>,
-    token: u32,
-    trap: Rc<RefCell<Option<KeyTrap>>>,
-    locked: Rc<Cell<bool>>,
+thread_local! {
+    static STACK: RefCell<dialog_a11y::ModalStack> = const { RefCell::new(dialog_a11y::ModalStack::new()) };
+    static ESCAPE_GATE: RefCell<dialog_a11y::EscapeGate> = const { RefCell::new(dialog_a11y::EscapeGate::new()) };
 }
 
-impl Session {
-    fn arm(id: String, open: Signal<bool>, generation: Rc<Cell<u32>>, token: u32) -> Self {
-        let trap = Rc::new(RefCell::new(None));
-        let locked = Rc::new(Cell::new(false));
-        poll_until_mounted(
-            id,
-            open,
-            Rc::clone(&generation),
-            token,
-            Rc::clone(&trap),
-            Rc::clone(&locked),
-            0,
-        );
-        Self { generation, token, trap, locked }
+fn with_stack<T>(apply: impl FnOnce(&mut dialog_a11y::ModalStack) -> T) -> T {
+    STACK.with(|stack| apply(&mut stack.borrow_mut()))
+}
+
+/// `thread_local!` inside `with_stack` would be a different stack for every
+/// return type, so opening and reading the top would not see the same dialogs.
+fn claim_escape(id: &str) -> bool {
+    let is_top = with_stack(|stack| dialog_a11y::allows_escape(stack.is_top(id)));
+    ESCAPE_GATE.with(|gate| {
+        let first = gate.borrow().is_empty();
+        let allowed = gate.borrow_mut().claim(id, is_top);
+        if first && allowed {
+            defer(|| ESCAPE_GATE.with(|gate| gate.borrow_mut().reset()));
+        }
+        allowed
+    })
+}
+
+fn sync_scroll_lock() {
+    let inert = with_stack(|stack| stack.background_inert());
+    let Some(root) = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.document_element())
+    else {
+        return;
+    };
+    let classes = root.class_list();
+    if inert {
+        let _ = classes.add_1("tesso-dialog-open");
+    } else {
+        let _ = classes.remove_1("tesso-dialog-open");
     }
 }
 
-/// Frames to wait before choosing initial focus. Fusor applies `hidden` and fills
-/// `<Children>` after the signal effect, so the first timeout can see a panel
-/// with no buttons yet.
-const FOCUS_SETTLE_ATTEMPTS: u8 = 3;
-const FOCUS_GIVE_UP_ATTEMPTS: u8 = 8;
+thread_local! {
+    static POINTER_OPENER: RefCell<Option<web_sys::Element>> = const { RefCell::new(None) };
+}
 
-impl Drop for Session {
-    fn drop(&mut self) {
-        if self.generation.get() == self.token {
-            self.generation.set(self.token.wrapping_add(1));
-        }
-        self.trap.borrow_mut().take();
-        if self.locked.replace(false) {
-            set_scroll_lock(false);
-        }
+fn install_pointer_tracker() {
+    thread_local! {
+        static INSTALLED: Cell<bool> = const { Cell::new(false) };
+    }
+    if INSTALLED.with(|installed| installed.replace(true)) {
+        return;
+    }
+    let Some(document) = web_sys::window().and_then(|window| window.document()) else {
+        INSTALLED.with(|installed| installed.set(false));
+        return;
+    };
+    let closure = Closure::wrap(Box::new(|event: web_sys::Event| {
+        record_pointer_target(&event);
+    }) as Box<dyn Fn(web_sys::Event)>);
+    if document
+        .add_event_listener_with_callback_and_bool(
+            "pointerdown",
+            closure.as_ref().unchecked_ref(),
+            true,
+        )
+        .is_ok()
+    {
+        closure.forget();
+    } else {
+        INSTALLED.with(|installed| installed.set(false));
     }
 }
 
-fn poll_until_mounted(
-    id: String,
-    open: Signal<bool>,
-    generation: Rc<Cell<u32>>,
-    token: u32,
-    trap: Rc<RefCell<Option<KeyTrap>>>,
-    locked: Rc<Cell<bool>>,
-    attempt: u8,
+fn record_pointer_target(event: &web_sys::Event) {
+    let Some(element) = event_element(event) else {
+        return;
+    };
+    let Some(control) = opener_control(&element) else {
+        return;
+    };
+    POINTER_OPENER.with(|slot| *slot.borrow_mut() = Some(control));
+}
+
+fn opener_control(start: &web_sys::Element) -> Option<web_sys::Element> {
+    let mut current = Some(start.clone());
+    while let Some(element) = current {
+        if is_opener_control(&element) {
+            return Some(element);
+        }
+        current = element.parent_element();
+    }
+    None
+}
+
+fn is_opener_control(element: &web_sys::Element) -> bool {
+    let tag = element.tag_name().to_ascii_lowercase();
+    match tag.as_str() {
+        "button" | "a" | "input" | "select" | "textarea" => true,
+        _ => element
+            .get_attribute("tabindex")
+            .and_then(|value| value.parse::<i32>().ok())
+            .is_some_and(|index| index >= 0),
+    }
+}
+
+fn remember_opener(
+    id: &str,
+    slot: &RefCell<Option<web_sys::Element>>,
+    choice: &Cell<OpenerChoice>,
 ) {
+    let active = active_element();
+    let pointer = POINTER_OPENER.with(|slot| slot.borrow().clone());
+    let picked = dialog_a11y::choose_opener(
+        active.as_ref().map(|element| facts(element, id)),
+        pointer.as_ref().map(|element| facts(element, id)),
+    );
+    let element = match picked {
+        OpenerChoice::Active => active,
+        OpenerChoice::Pointer => pointer,
+        OpenerChoice::None => None,
+    };
+    *slot.borrow_mut() = element;
+    choice.set(picked);
+}
+
+fn facts(element: &web_sys::Element, id: &str) -> OpenerFacts {
+    let node: &web_sys::Node = element.unchecked_ref();
+    let tag = element.tag_name().to_ascii_lowercase();
+    let inside = find_dialog(id).is_some_and(|dialog| {
+        let root: &web_sys::Node = dialog.unchecked_ref();
+        root.contains(Some(node))
+    });
+    OpenerFacts {
+        connected: node.is_connected(),
+        inside_dialog: inside,
+        is_body_or_html: tag == "body" || tag == "html",
+    }
+}
+
+fn restore_focus(id: &str, slot: &RefCell<Option<web_sys::Element>>, choice: &Cell<OpenerChoice>) {
+    let picked = choice.replace(OpenerChoice::None);
+    let Some(element) = slot.borrow_mut().take() else {
+        return;
+    };
+    let id = id.to_string();
+    // `close()` moves focus after the close event, back to whatever was focused
+    // at `showModal()`. Restore on the next turn so that move does not win.
     defer(move || {
-        if generation.get() != token || !open.get() {
-            return;
-        }
-        let panel = shown_panel(&id);
-        let Some(panel) = panel else {
-            if attempt < FOCUS_GIVE_UP_ATTEMPTS {
-                poll_until_mounted(id, open, generation, token, trap, locked, attempt + 1);
-            }
-            return;
-        };
-        if trap.borrow().is_none() {
-            match install_listener(&id, open.clone()) {
-                Some(key_trap) => {
-                    *trap.borrow_mut() = Some(key_trap);
-                    if !locked.replace(true) {
-                        set_scroll_lock(true);
-                    }
-                }
-                None if attempt < FOCUS_GIVE_UP_ATTEMPTS => {
-                    poll_until_mounted(id, open, generation, token, trap, locked, attempt + 1);
-                    return;
-                }
-                None => return,
+        let node: &web_sys::Node = element.unchecked_ref();
+        let inside = find_dialog(&id).is_some_and(|dialog| {
+            let root: &web_sys::Node = dialog.unchecked_ref();
+            root.contains(Some(node))
+        });
+        if dialog_a11y::should_restore_focus(picked, node.is_connected(), inside) {
+            if let Some(html) = element.dyn_ref::<web_sys::HtmlElement>() {
+                let _ = html.focus();
             }
         }
-        let target = dialog_a11y::initial_focus(&descriptions(&panel));
-        let waiting_for_controls = matches!(target, FocusTarget::Panel) && attempt < FOCUS_GIVE_UP_ATTEMPTS;
-        if attempt < FOCUS_SETTLE_ATTEMPTS || waiting_for_controls {
-            poll_until_mounted(id, open, generation, token, trap, locked, attempt + 1);
-            return;
-        }
-        // A Tab that arrived before this frame already moved focus inside the panel.
-        if focus_is_inside_dialog(&id, &panel) {
-            return;
-        }
-        focus_target(&panel, target);
     });
 }
 
-fn shown_panel(id: &str) -> Option<web_sys::Element> {
-    let root = dialog_root(id)?;
-    if root.has_attribute("hidden") {
-        return None;
-    }
-    panel_element(&root)
-}
-
-fn focus_is_inside_dialog(id: &str, panel: &web_sys::Element) -> bool {
-    let Some(active) = active_element() else { return false };
-    if same_element(&active, panel) {
-        return false;
-    }
-    dialog_root(id).is_some_and(|root| contains(&root, &active))
-}
-
-struct KeyTrap {
-    closure: Rc<Closure<dyn Fn(web_sys::Event)>>,
-}
-
-impl Drop for KeyTrap {
-    fn drop(&mut self) {
-        if let Some(document) = web_sys::window().and_then(|window| window.document()) {
-            let _ = document.remove_event_listener_with_callback_and_bool(
-                "keydown",
-                self.closure.as_js_value().unchecked_ref(),
-                true,
-            );
-        }
-        let closure = Rc::clone(&self.closure);
-        defer(move || drop(closure));
-    }
-}
-
-fn install_listener(id: &str, open: Signal<bool>) -> Option<KeyTrap> {
-    let id = id.to_owned();
-    let closure = Closure::wrap(Box::new(move |event: web_sys::Event| {
-        on_key(&id, &open, &event);
-    }) as Box<dyn Fn(web_sys::Event)>);
-    let document = web_sys::window()?.document()?;
-    document
-        .add_event_listener_with_callback_and_bool("keydown", closure.as_ref().unchecked_ref(), true)
-        .ok()?;
-    Some(KeyTrap { closure: Rc::new(closure) })
-}
-
-fn on_key(id: &str, open: &Signal<bool>, event: &web_sys::Event) {
-    let Some(keyboard) = event.dyn_ref::<web_sys::KeyboardEvent>() else { return };
-    let key = keyboard.key();
-    if dialog_a11y::is_escape(&key) {
-        event.prevent_default();
-        event.stop_propagation();
-        open.set(false);
-        return;
-    }
-    if dialog_a11y::is_tab(&key) {
-        event.prevent_default();
-        event.stop_propagation();
-        let Some(root) = dialog_root(id) else { return };
-        let Some(panel) = panel_element(&root) else { return };
-        let elements = focusable_elements(&panel);
-        let current = active_element().and_then(|active| {
-            elements.iter().position(|element| same_element(element, &active))
-        });
-        let target = dialog_a11y::focus_on_tab(&descriptions_of(&elements), current, keyboard.shift_key());
-        focus_resolved(&panel, &elements, target);
-    }
-}
-
-fn focus_target(panel: &web_sys::Element, target: FocusTarget) {
-    let elements = focusable_elements(panel);
-    focus_resolved(panel, &elements, target);
-}
-
-fn focus_resolved(panel: &web_sys::Element, elements: &[web_sys::Element], target: FocusTarget) {
-    match target {
-        FocusTarget::Item(index) => {
-            if let Some(element) = elements.get(index) {
-                focus_element(element);
-            } else {
-                focus_element(panel);
-            }
-        }
-        FocusTarget::Panel => focus_element(panel),
-    }
-}
-
-fn descriptions(panel: &web_sys::Element) -> Vec<Focusable> {
-    descriptions_of(&focusable_elements(panel))
-}
-
-fn descriptions_of(elements: &[web_sys::Element]) -> Vec<Focusable> {
-    elements.iter().map(describe).collect()
-}
-
-fn describe(element: &web_sys::Element) -> Focusable {
-    let tab_index = element.get_attribute("tabindex").and_then(|value| value.parse().ok()).unwrap_or(0);
-    Focusable {
-        disabled: element.has_attribute("disabled") || element.get_attribute("aria-disabled").as_deref() == Some("true"),
-        hidden: is_hidden(element),
-        tab_index,
-    }
-}
-
-fn focusable_elements(panel: &web_sys::Element) -> Vec<web_sys::Element> {
-    let Ok(list) = panel.query_selector_all(
-        "a[href], button, input:not([type=\"hidden\"]), select, textarea, [tabindex]",
-    ) else {
-        return Vec::new();
-    };
-    let mut elements = Vec::new();
-    for index in 0..list.length() {
-        let Some(node) = list.item(index) else { continue };
-        let Some(element) = node.dyn_ref::<web_sys::Element>() else { continue };
-        elements.push(element.clone());
-    }
-    elements
-}
-
-fn is_hidden(element: &web_sys::Element) -> bool {
-    let mut current = Some(element.clone());
-    while let Some(node) = current {
-        if node.has_attribute("hidden") || node.get_attribute("aria-hidden").as_deref() == Some("true") {
-            return true;
-        }
-        current = node.parent_element();
-    }
-    false
-}
-
-fn remember_opener(id: &str, slot: &RefCell<Option<web_sys::Element>>) {
-    let Some(active) = active_element() else { return };
-    let inside = dialog_root(id).is_some_and(|root| contains(&root, &active));
-    if !inside {
-        *slot.borrow_mut() = Some(active);
-    }
-}
-
-fn restore_focus(slot: &RefCell<Option<web_sys::Element>>) {
-    let Some(element) = slot.borrow_mut().take() else { return };
-    let node: &web_sys::Node = element.unchecked_ref();
-    if dialog_a11y::should_restore_focus(true, node.is_connected(), false) {
-        focus_element(&element);
-    }
-}
-
-fn dialog_root(id: &str) -> Option<web_sys::Element> {
-    web_sys::window()?
+fn find_dialog(id: &str) -> Option<web_sys::HtmlDialogElement> {
+    let element = web_sys::window()?
         .document()?
         .query_selector(&format!("[data-tesso-dialog=\"{id}\"]"))
         .ok()
-        .flatten()
-}
-
-fn panel_element(root: &web_sys::Element) -> Option<web_sys::Element> {
-    root.query_selector("[data-tesso-dialog-panel]").ok().flatten()
+        .flatten()?;
+    element.dyn_into::<web_sys::HtmlDialogElement>().ok()
 }
 
 fn active_element() -> Option<web_sys::Element> {
     web_sys::window()?.document()?.active_element()
 }
 
-fn contains(root: &web_sys::Element, node: &web_sys::Element) -> bool {
-    let root_node: &web_sys::Node = root.unchecked_ref();
-    let child: &web_sys::Node = node.unchecked_ref();
-    root_node.contains(Some(child))
+fn event_element(event: &web_sys::Event) -> Option<web_sys::Element> {
+    let target = event.target()?;
+    if let Some(element) = target.dyn_ref::<web_sys::Element>() {
+        return Some(element.clone());
+    }
+    target.dyn_ref::<web_sys::Node>()?.parent_element()
 }
 
 fn same_element(left: &web_sys::Element, right: &web_sys::Element) -> bool {
@@ -359,33 +475,10 @@ fn same_element(left: &web_sys::Element, right: &web_sys::Element) -> bool {
     left == right
 }
 
-fn focus_element(element: &web_sys::Element) {
-    if let Some(html) = element.dyn_ref::<web_sys::HtmlElement>() {
-        let _ = html.focus();
-    }
-}
-
-fn set_scroll_lock(lock: bool) {
-    thread_local! {
-        static DEPTH: Cell<i32> = const { Cell::new(0) };
-    }
-    DEPTH.with(|depth| {
-        let next = (depth.get() + if lock { 1 } else { -1 }).max(0);
-        depth.set(next);
-        let Some(root) = web_sys::window().and_then(|window| window.document()).and_then(|document| document.document_element()) else {
-            return;
-        };
-        let classes = root.class_list();
-        if next > 0 {
-            let _ = classes.add_1("tesso-dialog-open");
-        } else {
-            let _ = classes.remove_1("tesso-dialog-open");
-        }
-    });
-}
-
 fn defer(work: impl FnOnce() + 'static) {
-    let Some(window) = web_sys::window() else { return };
+    let Some(window) = web_sys::window() else {
+        return;
+    };
     let closure = Closure::once(work);
     if window
         .set_timeout_with_callback_and_timeout_and_arguments_0(closure.as_ref().unchecked_ref(), 0)

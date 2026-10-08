@@ -86,10 +86,9 @@ test("add dialog also installs its button dependency", async () => {
     "Element",
     "HtmlElement",
     "Node",
-    "NodeList",
     "Event",
     "EventTarget",
-    "KeyboardEvent",
+    "HtmlDialogElement",
     "DomTokenList",
   ]) {
     assert.match(cargo, new RegExp(`"${feature}"`));

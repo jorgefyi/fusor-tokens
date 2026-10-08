@@ -10,17 +10,21 @@ use crate::theme_toggle::ThemeToggle;
 struct App {
     count: Signal<i32>,
     reset_open: Signal<bool>,
+    details_open: Signal<bool>,
     increment: Rc<dyn Fn()>,
     decrement: Rc<dyn Fn()>,
     ask_reset: Rc<dyn Fn()>,
     cancel_reset: Rc<dyn Fn()>,
     confirm_reset: Rc<dyn Fn()>,
+    ask_details: Rc<dyn Fn()>,
+    close_details: Rc<dyn Fn()>,
 }
 
 impl App {
     fn new() -> Self {
         let count = signal(0);
         let reset_open = signal(false);
+        let details_open = signal(false);
         let increment = {
             let count = count.clone();
             Rc::new(move || count.update(|n| *n += 1)) as Rc<dyn Fn()>
@@ -45,14 +49,25 @@ impl App {
                 reset_open.set(false);
             }) as Rc<dyn Fn()>
         };
+        let ask_details = {
+            let details_open = details_open.clone();
+            Rc::new(move || details_open.set(true)) as Rc<dyn Fn()>
+        };
+        let close_details = {
+            let details_open = details_open.clone();
+            Rc::new(move || details_open.set(false)) as Rc<dyn Fn()>
+        };
         Self {
             count,
             reset_open,
+            details_open,
             increment,
             decrement,
             ask_reset,
             cancel_reset,
             confirm_reset,
+            ask_details,
+            close_details,
         }
     }
 }

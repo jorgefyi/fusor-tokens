@@ -49,34 +49,37 @@
         </div>
       </article>
     </section>
-    <div class="tesso-dialog-root" id="dialog" data-tesso-dialog="preview" hidden>
-      <div class="tesso-dialog-backdrop" id="backdrop"></div>
-      <div
-        class="tesso-dialog-panel"
-        id="panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dialog-title"
-        aria-describedby="dialog-description"
-        tabindex="-1"
-      >
+    <dialog class="tesso-dialog" id="dialog" data-tesso-dialog="preview" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+      <div class="tesso-dialog-panel" data-tesso-dialog-panel="">
         <h2 id="dialog-title" class="tesso-dialog-title">Reset the counter?</h2>
         <p id="dialog-description" class="tesso-dialog-description">This sets the count back to zero. You can keep counting after.</p>
         <div class="tesso-dialog-body">
           <button type="button" class="tesso-button tesso-button-quiet tesso-button-md" id="cancel">Cancel</button>
           <button type="button" class="tesso-button tesso-button-danger tesso-button-md" id="confirm">Reset count</button>
+          <button type="button" class="tesso-button tesso-button-secondary tesso-button-md" id="why">Why?</button>
         </div>
         <button type="button" class="tesso-button tesso-button-quiet tesso-button-sm tesso-dialog-close" id="close" aria-label="Close">Close</button>
       </div>
-    </div>
+    </dialog>
+    <dialog class="tesso-dialog" id="details" data-tesso-dialog="preview-details" role="dialog" aria-modal="true" aria-labelledby="details-title" aria-describedby="details-description">
+      <div class="tesso-dialog-panel" data-tesso-dialog-panel="">
+        <h2 id="details-title" class="tesso-dialog-title">Reset is local</h2>
+        <p id="details-description" class="tesso-dialog-description">This only clears the count in this tab. The rest of the page stays as it is.</p>
+        <div class="tesso-dialog-body">
+          <button type="button" class="tesso-button tesso-button-primary tesso-button-md" id="details-ok">OK</button>
+        </div>
+        <button type="button" class="tesso-button tesso-button-quiet tesso-button-sm tesso-dialog-close" id="details-close" aria-label="Close">Close</button>
+      </div>
+    </dialog>
     <script>
       (function () {
         var count = 0;
         var countEl = document.getElementById("count");
         var meta = document.getElementById("meta");
         var dialog = document.getElementById("dialog");
-        var panel = document.getElementById("panel");
-        var opener = null;
+        var details = document.getElementById("details");
+        var openers = new WeakMap();
+        var pointer = null;
         function systemDark() {
           return window.matchMedia("(prefers-color-scheme: dark)").matches;
         }
@@ -101,64 +104,70 @@
           try { localStorage.setItem("theme", next); } catch (e) {}
           paint();
         }
-        function focusables() {
-          return Array.prototype.filter.call(
-            panel.querySelectorAll('a[href], button, input:not([type="hidden"]), select, textarea, [tabindex]'),
-            function (el) {
-              if (el.hasAttribute("disabled") || el.getAttribute("aria-disabled") === "true") return false;
-              var tab = el.getAttribute("tabindex");
-              if (tab !== null && Number(tab) < 0) return false;
-              return !el.closest("[hidden]");
+        function usable(element, dialogEl) {
+          if (!element || !element.isConnected || element === document.body || element === document.documentElement) return false;
+          return !dialogEl.contains(element);
+        }
+        function remember(dialogEl) {
+          var active = document.activeElement;
+          var chosen = usable(active, dialogEl) ? active : (usable(pointer, dialogEl) ? pointer : null);
+          openers.set(dialogEl, chosen);
+        }
+        function restore(dialogEl) {
+          var chosen = openers.get(dialogEl);
+          openers.delete(dialogEl);
+          if (chosen && chosen.isConnected && !dialogEl.contains(chosen)) chosen.focus();
+        }
+        function syncLock() {
+          var any = dialog.open || details.open;
+          document.documentElement.classList.toggle("tesso-dialog-open", any);
+        }
+        function openDialog(dialogEl) {
+          if (dialogEl.open) return;
+          remember(dialogEl);
+          dialogEl.showModal();
+          syncLock();
+        }
+        function closeDialog(dialogEl) {
+          if (dialogEl.open) dialogEl.close();
+          restore(dialogEl);
+          syncLock();
+        }
+        document.addEventListener("pointerdown", function (event) {
+          var node = event.target;
+          if (node && node.nodeType !== 1) node = node.parentElement;
+          while (node && node !== document.body) {
+            var tag = node.tagName;
+            if (tag === "BUTTON" || tag === "A" || tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") {
+              pointer = node;
+              break;
             }
-          );
+            node = node.parentElement;
+          }
+        }, true);
+        function onCancel(event) {
+          event.preventDefault();
+          closeDialog(event.currentTarget);
         }
-        function openDialog() {
-          opener = document.activeElement;
-          dialog.hidden = false;
-          document.documentElement.classList.add("tesso-dialog-open");
-          var items = focusables();
-          (items[0] || panel).focus();
-        }
-        function closeDialog(restore) {
-          dialog.hidden = true;
-          document.documentElement.classList.remove("tesso-dialog-open");
-          if (restore && opener && opener.isConnected) opener.focus();
-          opener = null;
-        }
+        dialog.addEventListener("cancel", onCancel);
+        details.addEventListener("cancel", onCancel);
+        dialog.addEventListener("click", function (event) {
+          if (event.target === dialog) closeDialog(dialog);
+        });
+        details.addEventListener("click", function (event) {
+          if (event.target === details) closeDialog(details);
+        });
         document.getElementById("plus").addEventListener("click", function () { count += 1; paint(); });
         document.getElementById("minus").addEventListener("click", function () { count -= 1; paint(); });
         document.getElementById("light").addEventListener("click", function () { setTheme("light"); });
         document.getElementById("dark").addEventListener("click", function () { setTheme("dark"); });
-        document.getElementById("reset").addEventListener("click", openDialog);
-        document.getElementById("cancel").addEventListener("click", function () { closeDialog(true); });
-        document.getElementById("close").addEventListener("click", function () { closeDialog(true); });
-        document.getElementById("backdrop").addEventListener("click", function () { closeDialog(true); });
-        document.getElementById("confirm").addEventListener("click", function () { count = 0; closeDialog(true); paint(); });
-        document.addEventListener("keydown", function (event) {
-          if (dialog.hidden) return;
-          if (event.key === "Escape" || event.key === "Esc") {
-            event.preventDefault();
-            closeDialog(true);
-            return;
-          }
-          if (event.key !== "Tab") return;
-          var items = focusables();
-          if (!items.length) {
-            event.preventDefault();
-            panel.focus();
-            return;
-          }
-          var index = items.indexOf(document.activeElement);
-          event.preventDefault();
-          if (index === -1) {
-            items[event.shiftKey ? items.length - 1 : 0].focus();
-            return;
-          }
-          var next = event.shiftKey ? index - 1 : index + 1;
-          if (next < 0) next = items.length - 1;
-          if (next >= items.length) next = 0;
-          items[next].focus();
-        }, true);
+        document.getElementById("reset").addEventListener("click", function () { openDialog(dialog); });
+        document.getElementById("cancel").addEventListener("click", function () { closeDialog(dialog); });
+        document.getElementById("close").addEventListener("click", function () { closeDialog(dialog); });
+        document.getElementById("confirm").addEventListener("click", function () { count = 0; closeDialog(dialog); paint(); });
+        document.getElementById("why").addEventListener("click", function () { openDialog(details); });
+        document.getElementById("details-ok").addEventListener("click", function () { closeDialog(details); });
+        document.getElementById("details-close").addEventListener("click", function () { closeDialog(details); });
         window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
         paint();
       })();
