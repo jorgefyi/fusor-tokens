@@ -2,6 +2,15 @@
   "name": "fusor-tokens",
   "version": "0.1.0",
   "description": "Turn DTCG design tokens into public/tokens.css and wire them into a Fusor app.",
+  "license": "MIT",
+  "author": "jorgefyi",
+  "keywords": [
+    "design-tokens",
+    "dtcg",
+    "css-variables",
+    "fusor",
+    "terrazzo"
+  ],
   "type": "module",
   "bin": {
     "fusor-tokens": "./bin/fusor-tokens.js"
@@ -14,7 +23,8 @@
     "bin",
     "src",
     "schema.json",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"
